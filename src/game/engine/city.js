@@ -8,7 +8,7 @@ export const ADJACENCY_RULES = SYNERGIES.adjacency
 export const ZONE_RULES = SYNERGIES.zones
 
 const EFFECT_KEYS = [
-  'growth', 'donation', 'faith', 'churn', 'wariness',
+  'growth', 'donation', 'faith', 'churn', 'wariness', 'underworld',
   'income', 'incomePerPriest', 'convertCap', 'votePower', 'flatRecruit',
 ]
 

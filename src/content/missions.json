@@ -44,6 +44,21 @@
     "dailyCost": 260000,
     "wordScaled": true
   },
+  "charityDrive": {
+    "name": "奉仕活動",
+    "desc": "炊き出しと清掃を各地で続ける。地味だが、世間の目は確実にやわらぐ。",
+    "layer": "followers",
+    "mode": "sustained",
+    "unlock": {
+      "followers": 50000
+    },
+    "dailyCost": 1200000,
+    "effect": {
+      "wariness": -0.12,
+      "faith": 0.2,
+      "growth": 0.05
+    }
+  },
   "prayerMeeting": {
     "name": "合同祈祷会",
     "desc": "教祖自ら壇上に立つ大祈祷。信仰度が跳ね上がる。",
@@ -146,6 +161,20 @@
     "dailyCost": 9500000,
     "mediaScaled": true
   },
+  "imageCampaign": {
+    "name": "イメージ刷新キャンペーン",
+    "desc": "広告代理店を入れ、教団の見え方そのものを作り替える。",
+    "layer": "funds",
+    "mode": "sustained",
+    "unlock": {
+      "spent": 200000000
+    },
+    "dailyCost": 6000000,
+    "effect": {
+      "wariness": -0.2,
+      "donation": 0.04
+    }
+  },
   "megaEvent": {
     "name": "大規模イベント開催",
     "desc": "ドームを借り切った祝祭。爆発的に人を集めるが、世間の注目も一身に浴びる。",
@@ -163,6 +192,20 @@
     "instant": {
       "faith": 8,
       "wariness": 9
+    }
+  },
+  "coverUp": {
+    "name": "揉み消し",
+    "desc": "表に出かけた話を、出る前に止める。誰が止めたのかは誰も知らない。",
+    "layer": "funds",
+    "mode": "sustained",
+    "unlock": {
+      "spent": 350000000
+    },
+    "dailyCost": 12000000,
+    "effect": {
+      "wariness": -0.45,
+      "underworld": 0.15
     }
   },
   "lobbying": {

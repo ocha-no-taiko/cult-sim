@@ -7,7 +7,8 @@ import TitleScreen from './components/TitleScreen.jsx'
 import FoundingScreen from './components/FoundingScreen.jsx'
 import Header from './components/Header.jsx'
 import LogPanel from './components/LogPanel.jsx'
-import GuidePanel from './components/GuidePanel.jsx'
+import QuestPanel from './components/QuestPanel.jsx'
+import OpeningTutorial, { openingSeen } from './components/OpeningTutorial.jsx'
 import CityView from './components/CityView.jsx'
 import DoctrineView from './components/DoctrineView.jsx'
 import MissionView from './components/MissionView.jsx'
@@ -16,7 +17,11 @@ import BranchView from './components/BranchView.jsx'
 import StatsView from './components/StatsView.jsx'
 import EventToast from './components/EventToast.jsx'
 import EndingModal from './components/EndingModal.jsx'
-import { TipProvider, HelpModal } from './components/TipCard.jsx'
+import TipCardLazy, { TipProvider, HelpModal } from './components/TipCard.jsx'
+import LobbyScreen from './components/LobbyScreen.jsx'
+import RivalPanel from './components/RivalPanel.jsx'
+import { useMatch, matchDay } from './net/match.js'
+import { BUSINESS_MAP } from './game/data/facilities.js'
 
 const SAVE_KEY = 'cult-save-v2'
 const SPEED_MS = { 1: 900, 2: 400, 4: 160 }
@@ -50,21 +55,130 @@ export default function App() {
   const [hideEnding, setHideEnding] = useState(false)
   const [toasts, setToasts] = useState([])
   const [help, setHelp] = useState(false)
+  const [opening, setOpening] = useState(false)
+  const [screen, setScreen] = useState('game')   // game | lobby
+  const [multi, setMulti] = useState(false)
   const fileRef = useRef(null)
+  const match = useMatch()
+  const announced = useRef(new Set())
+  const totalsRef = useRef({ followers: 0, avgFaith: 50, nationalShare: 0 })
 
   const act = useCallback((type, payload) => dispatch({ type, payload }), [])
 
-  // ── 時間経過 ───────────────────────────────
+  // ── 時間経過（単独プレイ） ─────────────────
   useEffect(() => {
-    if (!started || state.phase !== 'playing' || !state.speed) return
+    if (multi || !started || state.phase !== 'playing' || !state.speed) return
     const ms = SPEED_MS[state.speed] ?? 900
     const id = setInterval(() => dispatch({ type: 'TICK' }), ms)
     return () => clearInterval(id)
-  }, [started, state.phase, state.speed])
+  }, [multi, started, state.phase, state.speed])
+
+  // ── 時間経過（対戦：共通の時計。止められない） ──
+  useEffect(() => {
+    if (!multi || !started || state.phase !== 'playing') return
+    if (match.room.phase !== 'running' || !match.room.startedAt) return
+    const id = setInterval(() => {
+      const target = matchDay(match.room)
+      dispatch({ type: 'TICK_TO', payload: target })
+    }, 120)
+    return () => clearInterval(id)
+  }, [multi, started, state.phase, match.room.phase, match.room.startedAt, match.room.msPerDay])
+
+  // ── 対戦：自分の状態をサーバへ送る（闇度は他人には配られない） ──
+  useEffect(() => {
+    if (!multi || match.status !== 'joined' || match.room.phase !== 'running') return
+    const push = () => {
+      match.send({
+        t: 'sync',
+        underworld: state.underworld,
+        achieved: state.achieved ?? {},
+        pub: {
+          day: state.day,
+          followers: Math.round(totalsRef.current.followers),
+          funds: Math.round(state.funds),
+          wariness: Math.round(state.wariness * 10) / 10,
+          priests: state.priests,
+          faith: Math.round(totalsRef.current.avgFaith),
+          share: totalsRef.current.nationalShare,
+          businesses: Object.keys(state.businesses)
+            .filter((k) => state.businesses[k] && !BUSINESS_MAP[k]?.shadow)
+            .map((k) => BUSINESS_MAP[k].name),
+        },
+      })
+    }
+    push()
+    const id = setInterval(push, 1500)
+    return () => clearInterval(id)
+  }, [multi, match.status, match.room.phase, state])
+
+  // ── 対戦：表の事業の設立は全員に伝わる ──────
+  useEffect(() => {
+    if (!multi || match.room.phase !== 'running') return
+    for (const [id, on] of Object.entries(state.businesses)) {
+      if (!on || announced.current.has(id)) continue
+      announced.current.add(id)
+      const b = BUSINESS_MAP[id]
+      if (b && !b.shadow) match.send({ t: 'announce', text: `${b.name}を設立した。` })
+    }
+  }, [multi, state.businesses, match.room.phase])
+
+  // ── 対戦：決着に届いたら申告する（先着をサーバが決める） ──
+  useEffect(() => {
+    if (!multi || !state.pendingClaim) return
+    match.send({ t: 'claim', ending: state.pendingClaim.type })
+    dispatch({ type: 'CLEAR_CLAIM' })
+  }, [multi, state.pendingClaim])
+
+  // ── 対戦：敗北の通知をサーバへ ──────────────
+  useEffect(() => {
+    if (!multi || state.phase !== 'gameover' || !state.ending) return
+    match.send({ t: 'dead', reason: state.ending.title })
+  }, [multi, state.phase, state.ending])
+
+  // ── 対戦：サーバからの報せ ──────────────────
+  useEffect(() => {
+    match.on({
+      killed: (m) => dispatch({ type: 'KILLED_BY', payload: { type: 'rivalAssassin', by: m.by } }),
+      backlash: () => dispatch({ type: 'KILLED_BY', payload: { type: 'retaliation' } }),
+      attacked: (m) => pushToast({ kind: 'bad', name: '襲撃', text: m.note ?? '何者かに狙われた。' }),
+      attackResult: (m) => {
+        if (m.outcome === 'unable' || m.outcome === 'cooldown') {
+          return pushToast({ kind: 'bad', name: '差し向けられない', text: m.reason ?? '' })
+        }
+        const label = {
+          success: `${m.targetName}の教祖を消した。`,
+          failed: '刺客は仕損じた。こちらの動きに足がついている。',
+          backlash: '返り討ちに遭った。',
+        }[m.outcome] ?? ''
+        dispatch({
+          type: 'PAY_ASSASSINATION',
+          payload: { cost: m.cost ?? 0, underworld: m.underworldAdd ?? 0, note: `【暗殺】${label}` },
+        })
+        pushToast({ kind: m.outcome === 'success' ? 'good' : 'bad', name: '暗殺', text: label })
+      },
+      over: (m) => {
+        const win = m.winnerId === match.me?.id
+        dispatch({ type: 'MATCH_RESULT', payload: { win, ending: m.ending, by: m.winner } })
+      },
+      claimResult: (m) => {
+        if (!m.ok) dispatch({ type: 'MATCH_RESULT', payload: { win: false, by: m.winner } })
+      },
+    })
+  }, [match.me?.id])
+
+  // ── 対戦：部屋が始まったら開教する ──────────
+  useEffect(() => {
+    if (!multi || screen !== 'lobby') return
+    if (match.room.phase !== 'running') return
+    dispatch({ type: 'SET_MULTIPLAYER', payload: true })
+    dispatch({ type: 'BEGIN_PREACHING' })
+    setScreen('game')
+    setTab('city')
+  }, [multi, screen, match.room.phase])
 
   // スペースキーで一時停止／再開
   useEffect(() => {
-    if (!started) return
+    if (!started || multi) return
     const onKey = (e) => {
       if (e.code !== 'Space' || e.target instanceof HTMLInputElement) return
       e.preventDefault()
@@ -72,7 +186,13 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [started, state.speed])
+  }, [started, multi, state.speed])
+
+  const pushToast = useCallback((item) => {
+    const key = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    setToasts((prev) => [...prev.slice(-2), { ...item, key, res: item.res ?? {} }])
+    setTimeout(() => setToasts((prev) => prev.filter((x) => x.key !== key)), 9000)
+  }, [])
 
   // 出来事は時間を止めずに通知だけ流す
   useEffect(() => {
@@ -87,21 +207,25 @@ export default function App() {
 
   // ── オートセーブ ───────────────────────────
   useEffect(() => {
-    if (!started || state.phase === 'founding') return
+    if (multi || !started || state.phase === 'founding') return
     if (state.day % 10 !== 0) return
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(state))
       setHasSave(true)
     } catch { /* 容量超過などは黙って諦める */ }
-  }, [state.day, started, state.phase])
+  }, [state.day, started, multi, state.phase])
 
   const t = useMemo(() => totals(state), [state])
   const fin = useMemo(() => finance(state, t), [state, t])
+  totalsRef.current = t
 
-  const newGame = (payload) => {
+  const newGame = (payload, asMatch = false) => {
     act('NEW_GAME', payload)
     setStarted(true)
     setHideEnding(false)
+    setMulti(asMatch)
+    setScreen('game')
+    announced.current = new Set()
     setTab('city')
   }
 
@@ -115,7 +239,10 @@ export default function App() {
   }
 
   const backToTitle = () => {
+    if (multi) match.leave()
     setStarted(false)
+    setMulti(false)
+    setScreen('game')
     act('SET_SPEED', 0)
     setHasSave(!!loadSave())
   }
@@ -151,6 +278,7 @@ export default function App() {
       <TitleScreen
         hasSave={hasSave}
         onStart={newGame}
+        onStartMatch={(payload) => newGame(payload, true)}
         onContinue={continueGame}
         onImport={() => fileRef.current?.click()}
         fileInput={<input ref={fileRef} type="file" accept="application/json" hidden onChange={importSave} />}
@@ -158,8 +286,29 @@ export default function App() {
     )
   }
 
+  if (screen === 'lobby') {
+    return (
+      <LobbyScreen
+        state={state}
+        match={match}
+        onBack={() => { match.leave(); setScreen('game'); setMulti(false); setStarted(false) }}
+      />
+    )
+  }
+
   if (state.phase === 'founding') {
-    return <FoundingScreen state={state} act={act} onBack={backToTitle} />
+    return (
+      <FoundingScreen
+        state={state}
+        act={act}
+        onBack={backToTitle}
+        onBegin={() => {
+          if (multi) return setScreen('lobby')
+          act('BEGIN_PREACHING')
+          if (!openingSeen()) setOpening(true)
+        }}
+      />
+    )
   }
 
   const view = {
@@ -183,6 +332,7 @@ export default function App() {
         onExport={exportSave}
         onImport={() => fileRef.current?.click()}
         onHelp={() => setHelp(true)}
+        match={multi ? match : null}
       />
       {fileRef && <input ref={fileRef} type="file" accept="application/json" hidden onChange={importSave} />}
 
@@ -197,7 +347,15 @@ export default function App() {
       <div className="body">
         <div className="main-col">{view}</div>
         <div className="side-col">
-          <GuidePanel state={state} totals={t} />
+          {multi && <TipCardLazy id="multiplayer" />}
+          {multi && (
+            <RivalPanel
+              state={state}
+              match={match}
+              onAssassinate={(target) => match.send({ t: 'assassinate', target, funds: state.funds })}
+            />
+          )}
+          <QuestPanel state={state} totals={t} />
           <LogPanel log={state.log} />
         </div>
       </div>
@@ -209,10 +367,11 @@ export default function App() {
           totals={t}
           onTitle={backToTitle}
           onDismiss={() => setHideEnding(true)}
-          onContinue={() => { setHideEnding(false); act('CONTINUE_AFTER_VICTORY') }}
+          onContinue={multi ? null : () => { setHideEnding(false); act('CONTINUE_AFTER_VICTORY') }}
         />
       )}
-      {help && <HelpModal onClose={() => setHelp(false)} />}
+      {help && <HelpModal onClose={() => setHelp(false)} onOpening={() => { setHelp(false); setOpening(true) }} />}
+      {opening && <OpeningTutorial state={state} onClose={() => setOpening(false)} />}
     </div>
     </TipProvider>
   )

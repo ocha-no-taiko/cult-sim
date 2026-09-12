@@ -5,7 +5,7 @@ import { DIFFICULTIES } from '../game/engine/constants.js'
 import { DEFAULT_ORDER_NAME } from '../game/engine/state.js'
 import { yen, people } from '../game/format.js'
 
-export default function TitleScreen({ hasSave, onStart, onContinue, onImport, fileInput }) {
+export default function TitleScreen({ hasSave, onStart, onStartMatch, onContinue, onImport, fileInput }) {
   const [difficulty, setDifficulty] = useState('normal')
   const [order, setOrder] = useState(DEFAULT_ORDER_NAME)
   const [region, setRegion] = useState('kanto')
@@ -105,6 +105,11 @@ export default function TitleScreen({ hasSave, onStart, onContinue, onImport, fi
             disabled={!order.trim()}
             onClick={() => onStart({ difficulty, homeRegionId: region, orderName: order.trim() })}>
             開教の準備に入る
+          </button>
+          <button className="btn" style={{ padding: '9px 26px' }}
+            disabled={!order.trim()}
+            onClick={() => onStartMatch({ difficulty, homeRegionId: region, orderName: order.trim() })}>
+            対戦で挑む
           </button>
           <button className="btn" disabled={!hasSave} onClick={onContinue}>続きから</button>
           <button className="btn ghost" onClick={onImport}>セーブを読み込む</button>

@@ -146,7 +146,7 @@ function FlatBuilding({ f, cx, cy, active, selected, label, status }) {
   )
 }
 
-export default function CityMap({ state, city, selected, onSelect, onMove, showSynergy, mode = 'iso' }) {
+export default function CityMap({ state, city, selected, onSelect, onMove, showSynergy, mode = 'iso', highlight = null }) {
   const svgRef = useRef(null)
   const [drag, setDrag] = useState(null)
   const proj = mode === 'flat' ? FLAT : ISO
@@ -249,6 +249,9 @@ export default function CityMap({ state, city, selected, onSelect, onMove, showS
           const f = facAt(x, y)
           const haloTile = showSynergy && city.hq &&
             Math.max(Math.abs(x - city.hq.x), Math.abs(y - city.hq.y)) === 1
+          const zoneLit = highlight && city.zoneHits.some(
+            (z) => z.rule.id === highlight && facAt(x, y)?.uid === z.uid,
+          )
           const isOver = drag?.over && drag.over.x === x && drag.over.y === y
           const isSel = selected && selected.x === x && selected.y === y
           return (
@@ -259,6 +262,9 @@ export default function CityMap({ state, city, selected, onSelect, onMove, showS
                 strokeWidth: isOver || isSel ? 1.8 : 1,
               })}
               {haloTile && haloShape(x, y)}
+              {zoneLit && tileShape(x, y, {
+                fill: 'none', stroke: 'var(--gold)', strokeWidth: 2.6, opacity: 0.95,
+              })}
               {showSynergy && isEdgeTile(x, y) && (
                 mode === 'flat'
                   ? <circle cx={cx - FLAT_CW / 2 + 12} cy={cy - FLAT_CH / 2 + 12} r="3" fill="rgba(94,184,255,0.4)" />
@@ -298,13 +304,15 @@ export default function CityMap({ state, city, selected, onSelect, onMove, showS
         const p2 = proj.toScreen(b.x, b.y)
         const mx = (p1.cx + p2.cx) / 2
         const my = (p1.cy + p2.cy) / 2
+        const lit = !highlight || l.rule.id === highlight
         return (
-          <g key={`l-${i}`} pointerEvents="none">
+          <g key={`l-${i}`} pointerEvents="none" opacity={lit ? 1 : 0.12}>
             <line x1={p1.cx} y1={p1.cy} x2={p2.cx} y2={p2.cy}
-              stroke="rgba(12,10,8,0.55)" strokeWidth="5" strokeLinecap="round" />
+              stroke="rgba(12,10,8,0.55)" strokeWidth={lit && highlight ? 7 : 5} strokeLinecap="round" />
             <line x1={p1.cx} y1={p1.cy} x2={p2.cx} y2={p2.cy}
-              stroke="var(--gold)" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="5 4" />
-            <circle cx={mx} cy={my} r="4.6" fill="#1a1509" stroke="var(--gold)" strokeWidth="1.4" />
+              stroke="var(--gold)" strokeWidth={lit && highlight ? 3.2 : 2.2}
+              strokeLinecap="round" strokeDasharray="5 4" />
+            <circle cx={mx} cy={my} r={lit && highlight ? 6 : 4.6} fill="#1a1509" stroke="var(--gold)" strokeWidth="1.4" />
             <circle cx={mx} cy={my} r="1.7" fill="var(--gold)" />
           </g>
         )

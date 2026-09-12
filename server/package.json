@@ -1,0 +1,13 @@
+{
+  "name": "cult-match-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "CULT の対戦サーバ。Tailscale 上で動かす前提の小さな WebSocket サーバ。",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

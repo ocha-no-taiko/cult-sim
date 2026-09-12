@@ -5,8 +5,14 @@ import { EVENTS, EVENT_CHANCE } from '../data/events.js'
 import {
   BASE_GROWTH_RATE, NEWCOMER_FAITH, FAITH_DECAY, BANKRUPT_LIMIT,
   HISTORY_CAP, LOG_CAP, WARINESS_STAGES, DIFFICULTY_MAP,
-  ELECTION_RETRY_DAYS,
+  ELECTION_RETRY_DAYS, UNDERWORLD_STAGES, UNDERWORLD_FADE_BASE, UNDERWORLD_FADE_SCALE,
+  ASSASSINATION_FLOOR, ASSASSINATION_RATE, ATTEMPT_FLOOR, ATTEMPT_RATE, FOUNDER_RECOVERY_DAYS,
+  CONGLOMERATE_FUNDS, CONGREGATION_SHARE, UPRISING_UNDERWORLD, UPRISING_FOLLOWERS,
+  STATE_RELIGION_CAP_BONUS,
 } from './constants.js'
+import { BUSINESSES } from '../data/facilities.js'
+import ENDINGS from '../../content/endings.json' with { type: 'json' }
+import { yen, pct } from '../format.js'
 import {
   facilityEffects, missionFlatEffects, missionGrowthForRegion,
   totals, finance, voteProjection, priestsAssigned,
@@ -54,6 +60,9 @@ export function advanceDay(prev) {
   s.funds += fin.net
 
   // ── 布教施策の定額獲得を地方へ配分 ──────────────────
+  // 国教化を果たすと布教が制度の側に入り、各地方で取り込める上限が上がる
+  const stateReligion = s.achieved?.firstParty ? STATE_RELIGION_CAP_BONUS : 1
+
   const open = REGIONS.filter((r) => s.regions[r.id].unlocked)
   const openPop = open.reduce((a, r) => a + r.population, 0) || 1
   const flatTotal = mx.flatRecruit ?? 0
@@ -88,7 +97,7 @@ export function advanceDay(prev) {
       const appeal = clusterAppeal(c, s.doctrine, r.bias)
       const F = cell.followers
 
-      const cap = pop * Math.min(0.60, 0.10 * appeal * (0.4 + (cell.faith / 100) * 0.8) * (1 + fx.growth * 0.25))
+      const cap = pop * Math.min(0.85, 0.10 * appeal * (0.4 + (cell.faith / 100) * 0.8) * (1 + fx.growth * 0.25) * stateReligion)
       // 施策・施設を積み増しても効果は逓減する
       const stack = Math.pow(1 + Math.max(0, fx.growth + missionGrowth), 0.62)
       const gMult = dg.growthMult * stack * r.mods.growth * settle * scaleDrag
@@ -103,7 +112,8 @@ export function advanceDay(prev) {
         dg.churnMult *
         Math.max(0.15, 1 + fx.churn + mx.churn) *
         Math.max(0.25, 1.2 - cell.faith / 125) *
-        (1 + s.wariness / 220)
+        (1 + s.wariness / 220) *
+        (1 + s.underworld / 250)
       const loss = F * churn
 
       // 新規流入は信仰度を薄める
@@ -140,13 +150,53 @@ export function advanceDay(prev) {
   // 母数が小さいうちの急成長は世間の目に留まらない
   const scaleAwareness = Math.min(1, t1.followers / 5_000)
   const growthPressure = Math.max(0, Math.min(1.0, (growthRate - 0.05) * 10)) * scaleAwareness
-  const scalePressure = Math.max(0, Math.log10(t1.followers + 10) - 3.3) * 0.17
+  const scalePressure = Math.max(0, Math.log10(t1.followers + 10) - 3.3) * 0.30
   // 世間は忘れる。警戒度が高いほど自然な鎮静も大きく働き、均衡点ができる
   const fade = 0.10 + s.wariness * 0.010
   const dW =
     (0.05 + dg.warinessAdd + growthPressure + scalePressure) * diffMult * regionWarinessAvg +
     fx.wariness + mx.wariness - fade
   s.wariness = Math.max(0, Math.min(100, s.wariness + dW))
+
+  // ── 闇度（裏の事業の濃さ） ──────────────────────────
+  const uwFade = UNDERWORLD_FADE_BASE + s.underworld * UNDERWORLD_FADE_SCALE
+  s.underworld = Math.max(0, Math.min(100, s.underworld + (fx.underworld + mx.underworld) - uwFade))
+
+  for (let i = UNDERWORLD_STAGES.length - 1; i >= 0; i--) {
+    if (s.underworld >= UNDERWORLD_STAGES[i].at && s.underworldStage < i) {
+      s.underworldStage = i
+      log(s, 'bad', `【${UNDERWORLD_STAGES[i].label}】${UNDERWORLD_STAGES[i].text}`)
+      break
+    }
+  }
+  if (s.underworldStage >= 0 && s.underworld < UNDERWORLD_STAGES[s.underworldStage].at - 6) {
+    s.underworldStage -= 1
+  }
+
+  // 教祖が外に出ているほど狙われやすい
+  const exposed = s.founder == null && Object.keys(s.activeMissions).some(
+    (id) => s.activeMissions[id] && MISSION_REQUIRES_FOUNDER.has(id),
+  )
+  if (s.phase === 'playing' && s.underworld >= ASSASSINATION_FLOOR) {
+    const rate = ((s.underworld - ASSASSINATION_FLOOR) / (100 - ASSASSINATION_FLOOR))
+      * ASSASSINATION_RATE * (exposed ? 1.6 : 1)
+    if (Math.random() < rate) {
+      s.phase = 'gameover'
+      s.speed = 0
+      s.ending = endingOf('assassinated')
+    }
+  } else if (s.phase === 'playing' && s.underworld >= ATTEMPT_FLOOR && s.founderInjuredUntil < s.day) {
+    if (Math.random() < ATTEMPT_RATE * (exposed ? 1.6 : 1)) {
+      s.founderInjuredUntil = s.day + FOUNDER_RECOVERY_DAYS
+      if (s.founder != null) {
+        const f = s.facilities.find((x) => x.uid === s.founder)
+        if (f) f.staff = 'none'
+        s.founder = null
+      }
+      s.wariness = Math.min(100, s.wariness + 5)
+      log(s, 'bad', `【暗殺未遂】教祖が襲われ、重傷を負った。${FOUNDER_RECOVERY_DAYS}日は動けない。`)
+    }
+  }
 
   // ── 単発施策の残日数 ────────────────────────────────
   for (const id of Object.keys(s.timedMissions)) {
@@ -192,13 +242,16 @@ export function advanceDay(prev) {
     runElection(s)
   }
 
+  // ── 国教化以外の決着 ────────────────────────────────
+  checkAlternateEndings(s, t1)
+
   // ── 敗北条件 ────────────────────────────────────────
   if (s.funds < 0) {
     s.bankruptDays += 1
     if (s.bankruptDays === 1) log(s, 'warn', `運転資金が尽きた。${BANKRUPT_LIMIT}日以内に立て直さなければ教団は解散する。`)
     if (s.bankruptDays >= BANKRUPT_LIMIT && s.phase === 'playing') {
       s.phase = 'gameover'
-      s.ending = { type: 'bankrupt', title: '資金枯渇', text: '給与も維持費も払えず、聖職者は去り、施設は差し押さえられた。教団は解散した。' }
+      s.ending = endingOf('bankrupt')
       s.speed = 0
     }
   } else {
@@ -207,7 +260,7 @@ export function advanceDay(prev) {
 
   if (s.wariness >= 100 && s.phase === 'playing') {
     s.phase = 'gameover'
-    s.ending = { type: 'raid', title: '強制捜査', text: '早朝、本部の門が叩かれた。押収された帳簿とともに、教団は解体された。' }
+    s.ending = endingOf('raid')
     s.speed = 0
   }
 
@@ -280,14 +333,14 @@ function runElection(s) {
   s.election.lastResult = { day: s.day, share: vp.share, rival: vp.rival, won: vp.wins }
 
   // 2回目以降の勝利は政権維持として流し、ゲームは止めない
-  if (vp.wins && s.victories > 0) {
+  if (vp.wins && s.achieved?.firstParty) {
     s.victories += 1
     s.election.nextDay = s.day + ELECTION_RETRY_DAYS
     log(s, 'good', `【総選挙】得票率${(vp.share * 100).toFixed(1)}%。第一与党の座を守った（通算${s.victories}期）。`)
     return
   }
   // 一度でも国教化したあとの敗北は、議席を失うだけで教団は続く
-  if (!vp.wins && s.victories > 0) {
+  if (!vp.wins && s.achieved?.firstParty) {
     s.election.nextDay = s.day + ELECTION_RETRY_DAYS
     s.wariness = Math.min(100, s.wariness + 4)
     log(s, 'warn', `【総選挙】得票率${(vp.share * 100).toFixed(1)}%。第一党の座を明け渡した。次の選挙は${ELECTION_RETRY_DAYS}日後。`)
@@ -295,17 +348,11 @@ function runElection(s) {
   }
 
   if (vp.wins) {
-    s.phase = 'victory'
-    s.speed = 0
-    s.victories = 1
-    const party = s.names?.party || '教団の政党'
-    const order = s.names?.order || '教団'
-    s.ending = {
-      type: 'victory',
-      title: '第一与党',
-      text: `得票率${(vp.share * 100).toFixed(1)}%。「${party}」が第一与党の座に就いた。${order}の教義は、この国の背骨になった。`,
-    }
-    log(s, 'good', `【総選挙】「${party}」が得票率${(vp.share * 100).toFixed(1)}%で第一与党を獲得。国教化を達成した。`)
+    finishWith(s, 'firstParty', {
+      share: pct(vp.share),
+      party: s.names?.party || '教団の政党',
+      order: s.names?.order || '教団',
+    })
   } else {
     s.election.nextDay = s.day + ELECTION_RETRY_DAYS
     s.wariness = Math.min(100, s.wariness + 6)
@@ -315,4 +362,60 @@ function runElection(s) {
       `【総選挙】得票率${(vp.share * 100).toFixed(1)}%。第一党の${(vp.rival * 100).toFixed(1)}%に届かず。次の選挙は${ELECTION_RETRY_DAYS}日後。`,
     )
   }
+}
+
+
+// 教祖が自ら出向く継続施策（暗殺のリスクが上がる）
+const MISSION_REQUIRES_FOUNDER = new Set(['circuit'])
+
+/** エンディング定義から表示用のオブジェクトを作る */
+function endingOf(type, vars = {}) {
+  const def = ENDINGS[type] ?? { title: type, text: '' }
+  let text = def.text ?? ''
+  for (const [k, v] of Object.entries(vars)) text = text.replaceAll(`{${k}}`, v)
+  return { type, title: def.title, text, kind: def.kind }
+}
+
+/**
+ * 第一与党以外の決着。条件は src/content/endings.json に置いてある。
+ * 一度きりで、続きを遊ぶこともできる。
+ */
+function checkAlternateEndings(s, t) {
+  if (s.phase !== 'playing') return
+  s.achieved = s.achieved ?? {}
+
+  const cg = ENDINGS.conglomerate
+  if (!s.achieved.conglomerate && s.funds >= cg.requireFunds
+      && (!cg.requireAllBusinesses || BUSINESSES.every((b) => s.businesses[b.id]))) {
+    finishWith(s, 'conglomerate', { businesses: BUSINESSES.length, funds: yen(cg.requireFunds) })
+    return
+  }
+
+  const cn = ENDINGS.congregation
+  if (!s.achieved.congregation && t.nationalShare >= cn.requireShare) {
+    finishWith(s, 'congregation', { share: pct(t.nationalShare) })
+    return
+  }
+
+  const up = ENDINGS.uprising
+  if (!s.achieved.uprising && s.businesses[up.requireBusiness]
+      && s.underworld >= up.requireUnderworld && t.followers >= up.requireFollowers) {
+    finishWith(s, 'uprising', {})
+  }
+}
+
+function finishWith(s, type, vars = {}) {
+  s.achieved = s.achieved ?? {}
+  s.achieved[type] = s.day
+  s.victories = (s.victories ?? 0) + 1
+  s.ending = endingOf(type, vars)
+  // 対戦では先着かどうかをサーバが決めるので、ここでは止めずに申告だけ立てる
+  if (s.multiplayer) {
+    s.pendingClaim = { type, title: s.ending.title, day: s.day }
+    s.ending = null
+  } else {
+    s.phase = 'victory'
+    s.speed = 0
+  }
+  log(s, 'good', `【${endingOf(type, vars).title}】${endingOf(type, vars).text}`)
 }

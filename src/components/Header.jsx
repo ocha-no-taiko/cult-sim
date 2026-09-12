@@ -1,7 +1,7 @@
 import React from 'react'
 import { yen, yenSigned, people, dayLabel, orderName } from '../game/format.js'
 import { founderBusyOn, priestsFree, priestsAssigned } from '../game/engine/selectors.js'
-import { WARINESS_STAGES } from '../game/engine/constants.js'
+import { WARINESS_STAGES, UNDERWORLD_STAGES } from '../game/engine/constants.js'
 
 function warinessColor(w) {
   if (w >= 85) return 'var(--bad)'
@@ -10,11 +10,22 @@ function warinessColor(w) {
   return 'var(--good)'
 }
 
-export default function Header({ state, act, totals: t, finance: fin, onTitle, onExport, onImport, onHelp }) {
+const SHADOW = new Set(['conspiracy', 'nightlife', 'usury', 'narcotics', 'syndicate'])
+
+function underworldColor(u) {
+  if (u >= 80) return 'var(--bad)'
+  if (u >= 70) return 'var(--warn)'
+  if (u >= 45) return 'var(--gold)'
+  return 'var(--ink-dim)'
+}
+
+export default function Header({ state, act, totals: t, finance: fin, onTitle, onExport, onImport, onHelp, match = null }) {
   const busy = founderBusyOn(state)
   const free = priestsFree(state)
   const assigned = priestsAssigned(state)
   const stage = [...WARINESS_STAGES].reverse().find((s) => state.wariness >= s.at)
+  const uwStage = [...UNDERWORLD_STAGES].reverse().find((s) => state.underworld >= s.at)
+  const hasShadow = state.underworld > 0 || Object.keys(state.businesses).some((k) => state.businesses[k] && SHADOW.has(k))
 
   return (
     <header className="hdr">
@@ -69,19 +80,39 @@ export default function Header({ state, act, totals: t, finance: fin, onTitle, o
         <span className="gauge"><i style={{ width: `${state.wariness}%`, background: warinessColor(state.wariness) }} /></span>
       </div>
 
-      <div className="hdr-right">
-        <div className="speed">
-          {[0, 1, 2, 4].map((sp) => (
-            <button
-              key={sp}
-              className={state.speed === sp ? 'on' : ''}
-              onClick={() => act('SET_SPEED', sp)}
-              title={sp === 0 ? '一時停止' : `${sp}倍速`}
-            >
-              {sp === 0 ? '∥' : `×${sp}`}
-            </button>
-          ))}
+      {hasShadow && (
+        <div className="stat gauge-wrap">
+          <span className="k">闇度</span>
+          <span className="v num" style={{ color: underworldColor(state.underworld) }}>
+            {state.underworld.toFixed(1)}
+            <span className="faint" style={{ fontSize: 12, marginLeft: 6, fontFamily: 'var(--gothic)' }}>
+              {uwStage ? uwStage.label : '清廉'}
+            </span>
+          </span>
+          <span className="gauge"><i style={{ width: `${state.underworld}%`, background: underworldColor(state.underworld) }} /></span>
         </div>
+      )}
+
+      <div className="hdr-right">
+        {match ? (
+          <span className="match-clock" title="対戦中は時間を止められない">
+            対戦 <b>{match.room.players?.filter((p) => p.alive).length ?? 0}</b>教団
+            <span className="faint">1日 {((match.room.msPerDay ?? 8000) / 1000).toFixed(1)}秒</span>
+          </span>
+        ) : (
+          <div className="speed">
+            {[0, 1, 2, 4].map((sp) => (
+              <button
+                key={sp}
+                className={state.speed === sp ? 'on' : ''}
+                onClick={() => act('SET_SPEED', sp)}
+                title={sp === 0 ? '一時停止' : `${sp}倍速`}
+              >
+                {sp === 0 ? '∥' : `×${sp}`}
+              </button>
+            ))}
+          </div>
+        )}
         <button className="btn sm ghost" onClick={onHelp}>遊び方</button>
         <button className="btn sm ghost" onClick={onExport} title="現在の状態をJSONで書き出す">保存</button>
         <button className="btn sm ghost" onClick={onImport}>読込</button>

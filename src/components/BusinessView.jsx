@@ -11,8 +11,32 @@ import PriestPanel from './PriestPanel.jsx'
 import FounderRelease from './FounderRelease.jsx'
 import TipCard from './TipCard.jsx'
 
-const NAME_KEY = { publishing: 'press', education: 'school', foundation: 'foundation', party: 'party' }
-const NAME_LABEL = { publishing: '出版局の名', education: '学校の名', foundation: '財団の名', party: '政党の名' }
+const NAME_KEY = {
+  publishing: 'press', education: 'school', foundation: 'foundation', party: 'party',
+  welfare: 'hospital', arts: 'culture',
+  conspiracy: 'info', nightlife: 'night', usury: 'usury', narcotics: 'lab', syndicate: 'syndicate',
+}
+const NAME_LABEL = {
+  publishing: '出版局の名', education: '学校の名', foundation: '財団の名', party: '政党の名',
+  welfare: '病院の名', arts: '文化施設の名',
+  conspiracy: '工作機関の名', nightlife: '歓楽事業の名', usury: '金融会社の名',
+  narcotics: '施設の名', syndicate: '盟約の名',
+}
+
+// 事業と、それが解禁する施設の対応
+const BIZ_FACILITIES = {
+  publishing: ['press', 'broadcast'],
+  education: ['school'],
+  welfare: ['hospital'],
+  foundation: ['foundationOffice'],
+  arts: ['cultureHall'],
+  party: ['partyHQ'],
+  conspiracy: ['infoRoom'],
+  nightlife: ['nightOffice'],
+  usury: ['usuryOffice'],
+  narcotics: ['refinery'],
+  syndicate: ['syndicateRoom'],
+}
 
 function countActive(state, typeId) {
   const all = state.facilities.filter((f) => f.type === typeId)
@@ -92,6 +116,49 @@ function Detail({ id, state, act, totals: t }) {
           慈善と社会貢献は、教団の顔を変える。「{n.foundation}」の事務局は教団に一つだけ置け、
           稼働している間ずっと世間の警戒を引き下げる。急拡大に踏み切る前に建てておきたい。
         </div>
+      </div>
+    )
+  }
+
+  if (id !== 'party') {
+    const biz = BUSINESSES.find((b) => b.id === id)
+    const types = BIZ_FACILITIES[id] ?? []
+    const uw = types.reduce(
+      (a, ty) => a + (FACILITY_MAP[ty]?.effect?.underworld ?? 0) * countActive(state, ty).active, 0,
+    )
+    const wr = types.reduce(
+      (a, ty) => a + (FACILITY_MAP[ty]?.effect?.wariness ?? 0) * countActive(state, ty).active, 0,
+    )
+    const inc = types.reduce(
+      (a, ty) => a + (FACILITY_MAP[ty]?.effect?.income ?? 0) * countActive(state, ty).active, 0,
+    )
+    return (
+      <div className="panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+        <div className="kv" style={{ maxWidth: 400 }}>
+          {types.map((ty) => {
+            const c = countActive(state, ty)
+            return (
+              <React.Fragment key={ty}>
+                <span className="k">{FACILITY_MAP[ty]?.name ?? ty}</span>
+                <span className="v">{c.active} / {c.total} 稼働</span>
+              </React.Fragment>
+            )
+          })}
+          {inc !== 0 && (<><span className="k">この事業の収入</span><span className="v">{yen(inc)}/日</span></>)}
+          {wr !== 0 && (
+            <><span className="k">警戒度への効き</span>
+              <span className={`v ${wr < 0 ? 'good' : 'bad'}`}>{wr > 0 ? '+' : ''}{wr.toFixed(2)}/日</span></>
+          )}
+          {uw !== 0 && (<><span className="k">闇度への効き</span><span className="v bad">+{uw.toFixed(2)}/日</span></>)}
+        </div>
+        <RenameRow state={state} act={act} bizId={id} />
+        <div className={`hint${biz?.shadow ? ' alert' : ''}`}>{biz?.desc}</div>
+        {biz?.shadow && (
+          <div className="hint alert">
+            現在の闇度は <b>{state.underworld.toFixed(1)}</b>。80を超えると暗殺の危険が現実になる。
+            施設の配置を解除すれば闇度は自然に下がっていく。
+          </div>
+        )}
       </div>
     )
   }
@@ -181,6 +248,10 @@ function NamingDialog({ biz, state, onCancel, onConfirm }) {
 
 export default function BusinessView({ state, act, totals: t }) {
   const founded = BUSINESSES.filter((b) => state.businesses[b.id])
+  const openBiz = BUSINESSES.filter((b) => !b.shadow)
+  const shadowBiz = BUSINESSES.filter((b) => b.shadow)
+  const shadowKnown = shadowBiz.some((b) => state.businesses[b.id])
+    || t.followers >= Math.min(...shadowBiz.map((b) => b.unlock.followers))
   const [tab, setTab] = useState(null)
   const [naming, setNaming] = useState(null)
   const activeTab = state.businesses[tab] ? tab : (founded[founded.length - 1]?.id ?? null)
@@ -196,6 +267,8 @@ export default function BusinessView({ state, act, totals: t }) {
     <>
       <TipCard id="business" />
       <TipCard id="priest" />
+      {shadowKnown && <TipCard id="shadow" />}
+      <TipCard id="endings" />
       <div className="hint">
         事業は<b>出版 → 教育 → 財団 → 政党</b>の順に解禁されていく。設立できるのは教祖だけなので、
         施設に教祖を置いている間は手をつけられない。設立時に事業ごとの名前を決められる。
@@ -207,12 +280,14 @@ export default function BusinessView({ state, act, totals: t }) {
 
       <div className="panel">
         <div className="panel-head">
-          事業展開
-          <span className="faint" style={{ fontSize: 12 }}>設立済み {founded.length} / {BUSINESSES.length}</span>
+          表の事業
+          <span className="faint" style={{ fontSize: 12 }}>
+            設立済み {founded.length} / {BUSINESSES.length}
+          </span>
         </div>
         <div className="panel-body">
           <div className="cards">
-            {BUSINESSES.map((b) => {
+            {openBiz.map((b) => {
               const done = state.businesses[b.id]
               const chk = businessAvailable(state, b.id)
               const name = state.names[NAME_KEY[b.id]]
@@ -244,6 +319,53 @@ export default function BusinessView({ state, act, totals: t }) {
           </div>
         </div>
       </div>
+
+      {shadowKnown && (
+        <div className="panel shadow-panel">
+          <div className="panel-head">
+            裏の事業
+            <span className="faint" style={{ fontSize: 12 }}>金は入る。教団は濁る。</span>
+          </div>
+          <div className="panel-body">
+            <div className="hint alert" style={{ marginBottom: 11 }}>
+              裏の事業は<b>闇度</b>を押し上げる。80を超えると教祖が暗殺される危険が現実になり、
+              信仰も濁って離脱が増える。一方で収入の桁は表の事業と比べものにならない。
+              一度も手を出さずに国教化まで行くこともできる。
+            </div>
+            <div className="cards">
+              {shadowBiz.map((b) => {
+                const done = state.businesses[b.id]
+                const chk = businessAvailable(state, b.id)
+                const name = state.names[NAME_KEY[b.id]]
+                return (
+                  <div key={b.id} className={`card shadow${done ? ' active' : ''}`}>
+                    <div className="card-head">
+                      <span className="card-name">{b.icon} {done && name ? name : b.name}</span>
+                      {done ? <span className="tag on">設立済み</span> : <span className="tag gold">{yen(b.cost)}</span>}
+                    </div>
+                    {done && name && <div className="faint" style={{ fontSize: 12 }}>{b.name}</div>}
+                    <div className="card-desc">{b.desc}</div>
+                    <div className="faint" style={{ fontSize: 12 }}>
+                      解禁条件：信者 {people(b.unlock.followers)}
+                      {b.unlock.business ? ` ／ ${BUSINESSES.find((x) => x.id === b.unlock.business).name}の設立` : ''}
+                    </div>
+                    <div className="card-foot">
+                      {done ? (
+                        <button className="btn sm" onClick={() => setTab(b.id)}>管理する</button>
+                      ) : (
+                        <button className="btn sm primary" disabled={!chk.ok} onClick={() => setNaming(b)}>
+                          手を染める
+                        </button>
+                      )}
+                      {!done && !chk.ok && <span className="tag locked">{chk.reason}</span>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeTab && (
         <div className="panel">

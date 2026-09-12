@@ -1,0 +1,62 @@
+{
+  "firstParty": {
+    "kind": "victory",
+    "title": "第一与党",
+    "text": "得票率{share}。「{party}」が第一与党の座に就いた。{order}の教義は、この国の背骨になった。",
+    "hint": "政党を設立し、総選挙で第一党の得票率を上回る。"
+  },
+  "conglomerate": {
+    "kind": "victory",
+    "title": "コングロマリット",
+    "text": "表も裏も、{businesses}の事業すべてが教団の傘下に入った。運転資金は{funds}を超え、この国の経済は教団の会計の一部になった。信仰は、もはや看板にすぎない。",
+    "hint": "表と裏の全事業を設立し、運転資金を積み上げる。",
+    "requireAllBusinesses": true,
+    "requireFunds": 30000000000000
+  },
+  "congregation": {
+    "kind": "victory",
+    "title": "国民の半分",
+    "text": "全人口の{share}が信者になった。選挙を待つまでもない。この国の過半数は、すでに教団の中にいる。",
+    "hint": "全人口の半分を信者にする。国教化すると布教が制度に組み込まれ、上限が上がる。",
+    "requireShare": 0.5
+  },
+  "uprising": {
+    "kind": "victory",
+    "title": "国家転覆",
+    "text": "盟約は果たされた。信者と暴力が同じ指揮系統に入り、教団は宗教であることをやめた。この国は、票ではなく力によって書き換えられる。",
+    "hint": "暴力団と盟約を結び、闇度を振り切ったまま信者を集める。暗殺との競争になる。",
+    "requireBusiness": "syndicate",
+    "requireUnderworld": 95,
+    "requireFollowers": 5000000
+  },
+  "bankrupt": {
+    "kind": "defeat",
+    "title": "資金枯渇",
+    "text": "給与も維持費も払えず、聖職者は去り、施設は差し押さえられた。教団は解散した。"
+  },
+  "raid": {
+    "kind": "defeat",
+    "title": "強制捜査",
+    "text": "早朝、本部の門が叩かれた。押収された帳簿とともに、教団は解体された。"
+  },
+  "assassinated": {
+    "kind": "defeat",
+    "title": "教祖暗殺",
+    "text": "説法の帰り、教祖は車を降りたところで撃たれた。裏社会に深入りしすぎた教団は、頭を失って散り散りになった。"
+  },
+  "rivalAssassin": {
+    "kind": "defeat",
+    "title": "他教団による暗殺",
+    "text": "教祖は、見知らぬ男に撃たれた。手を回したのは「{by}」だという噂だけが残った。闇に触れた者は、より深い闇に沈められる。"
+  },
+  "retaliation": {
+    "kind": "defeat",
+    "title": "逆襲",
+    "text": "差し向けた刺客は、返り討ちに遭った。こちらの素性は既に割れていた。翌朝、教祖は自室で冷たくなっていた。"
+  },
+  "outpaced": {
+    "kind": "defeat",
+    "title": "一歩遅れた",
+    "text": "同じ決着に、先に「{by}」が到達した。積み上げたものは残ったが、この国を書き換えたのは別の教団だった。"
+  }
+}

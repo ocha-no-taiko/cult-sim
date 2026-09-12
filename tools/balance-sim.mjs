@@ -23,9 +23,57 @@ const act = (type, payload) => { s = reducer(s, { type, payload }) }
 act('SET_DOCTRINE_DRAFT', { worldly: 85, apocalypse: 62, hierarchy: 62, asceticism: 42 })
 act('BEGIN_PREACHING')
 
-const BUILD_ORDER = ['missionPost', 'hall', 'press', 'dojo', 'school', 'foundationOffice',
-  'broadcast', 'partyHQ']
-const BUILD_LIMIT = { missionPost: 4, hall: 3, press: 2, dojo: 2, school: 3, broadcast: 2, foundationOffice: 1, partyHQ: 1 }
+// ROUTE=light|shadow|economy|mass で建て方と狙う決着を変える
+const ROUTE = process.env.ROUTE ?? 'light'
+const PLANS = {
+  light: {
+    order: ['missionPost', 'hall', 'press', 'dojo', 'school', 'hospital', 'foundationOffice',
+      'cultureHall', 'broadcast', 'partyHQ'],
+    limit: { missionPost: 3, hall: 2, press: 2, dojo: 2, school: 2, hospital: 2,
+      cultureHall: 2, broadcast: 2, foundationOffice: 1, partyHQ: 1 },
+    shadow: false,
+  },
+  shadow: {
+    order: ['missionPost', 'press', 'school', 'infoRoom', 'hall', 'nightOffice', 'dojo',
+      'usuryOffice', 'hospital', 'refinery', 'foundationOffice', 'broadcast', 'syndicateRoom'],
+    limit: { missionPost: 2, hall: 2, press: 1, dojo: 2, school: 2, hospital: 1, broadcast: 1,
+      foundationOffice: 1, infoRoom: 2, nightOffice: 2, usuryOffice: 2, refinery: 3, syndicateRoom: 1 },
+    shadow: true,
+  },
+  economy: {
+    order: ['missionPost', 'press', 'school', 'infoRoom', 'hall', 'nightOffice', 'hospital',
+      'usuryOffice', 'foundationOffice', 'refinery', 'broadcast', 'cultureHall', 'dojo',
+      'syndicateRoom', 'partyHQ'],
+    limit: { missionPost: 2, hall: 1, press: 1, dojo: 1, school: 2, hospital: 1, cultureHall: 1,
+      broadcast: 1, foundationOffice: 1, infoRoom: 1, nightOffice: 2, usuryOffice: 3, refinery: 3,
+      syndicateRoom: 1, partyHQ: 1 },
+    shadow: true,
+  },
+  uprising: {
+    order: ['missionPost', 'press', 'school', 'hall', 'dojo', 'infoRoom', 'hospital',
+      'foundationOffice', 'hospital', 'broadcast', 'nightOffice', 'usuryOffice', 'refinery', 'syndicateRoom'],
+    limit: { missionPost: 3, hall: 2, press: 1, dojo: 2, school: 2, hospital: 3, broadcast: 1,
+      foundationOffice: 1, infoRoom: 1, nightOffice: 1, usuryOffice: 1, refinery: 2, syndicateRoom: 1 },
+    shadow: true,
+    holdUntilFollowers: 5_000_000,
+  },
+  greedy: {
+    order: ['missionPost', 'hall', 'press', 'school', 'broadcast', 'dojo', 'partyHQ'],
+    limit: { missionPost: 5, hall: 3, press: 2, dojo: 2, school: 2, broadcast: 3, partyHQ: 1 },
+    shadow: false,
+    skipBusinesses: ['welfare', 'arts', 'foundation'],
+  },
+  mass: {
+    order: ['missionPost', 'hall', 'press', 'dojo', 'school', 'hospital', 'foundationOffice',
+      'broadcast', 'cultureHall'],
+    limit: { missionPost: 4, hall: 3, press: 2, dojo: 4, school: 2, hospital: 2,
+      cultureHall: 2, broadcast: 3, foundationOffice: 1 },
+    shadow: false,
+  },
+}
+const PLAN = PLANS[ROUTE] ?? PLANS.light
+const BUILD_ORDER = PLAN.order
+const BUILD_LIMIT = PLAN.limit
 const CAUTIOUS = !!process.env.CAUTIOUS
 const RISKY_MISSIONS = ['tvcm', 'celebrity', 'doorToDoor', 'newspaperAd']
 
@@ -39,7 +87,8 @@ function freeTile() {
 const milestones = {}
 const mark = (k) => { if (!milestones[k]) milestones[k] = s.day }
 
-for (let i = 0; i < 3000 && s.phase === 'playing'; i++) {
+const MAX_DAYS = Number(process.env.MAX_DAYS ?? 3000)
+for (let i = 0; i < MAX_DAYS && s.phase === 'playing'; i++) {
   const t = totals(s)
   const fin = finance(s, t)
   const reserve = Math.max(3_000_000, fin.expense * 8)
@@ -47,6 +96,8 @@ for (let i = 0; i < 3000 && s.phase === 'playing'; i++) {
   // 解禁済みで未設立の事業があるなら、教祖を施設から引き上げて設立に充てる
   const wantBiz = BUSINESSES.find((b) => {
     if (s.businesses[b.id]) return false
+    if (b.shadow && !PLAN.shadow) return false
+    if (PLAN.skipBusinesses?.includes(b.id)) return false
     if (b.unlock.business && !s.businesses[b.unlock.business]) return false
     return t.followers >= b.unlock.followers
   })
@@ -105,13 +156,28 @@ for (let i = 0; i < 3000 && s.phase === 'playing'; i++) {
     mark('priest:first')
   }
 
+  // 裏の施設は闇度が危険域に入る前に止める（踏み込む段になったら全部動かす）
+  const DIRTY = ['syndicateRoom', 'refinery', 'usuryOffice', 'nightOffice', 'infoRoom']
+  const pushing = PLAN.holdUntilFollowers ? t.followers >= PLAN.holdUntilFollowers : false
+  const uwCeiling = PLAN.holdUntilFollowers ? 60 : (PLAN.uwCeiling ?? 55)
+  if (PLAN.shadow && !pushing && s.underworld > uwCeiling) {
+    // 危険域に入ったら裏の施設は一斉に畳む
+    for (const type of DIRTY) {
+      for (const f of s.facilities.filter((x) => x.type === type && x.staff !== 'none')) {
+        act('SET_STAFF', { uid: f.uid, mode: 'none' })
+      }
+    }
+  }
+
   // 配置：まず聖職者で埋める
-  const priority = ['foundationOffice', 'school', 'press', 'broadcast', 'missionPost', 'hall', 'dojo', 'partyHQ']
+  const priority = ['foundationOffice', 'school', 'press', 'broadcast', 'missionPost', 'hall', 'dojo',
+    'hospital', 'cultureHall', 'partyHQ', 'infoRoom', 'nightOffice', 'usuryOffice', 'refinery', 'syndicateRoom']
   const sortedFac = [...s.facilities].sort(
     (a, b) => priority.indexOf(a.type) - priority.indexOf(b.type))
   for (const f of sortedFac) {
     const def = FACILITY_MAP[f.type]
     if (def.alwaysActive || f.staff !== 'none') continue
+    if (PLAN.shadow && !pushing && DIRTY.includes(f.type) && s.underworld > uwCeiling) continue
     if (priestsFree(s) >= def.priests) act('SET_STAFF', { uid: f.uid, mode: 'priests' })
   }
 
@@ -132,16 +198,20 @@ for (let i = 0; i < 3000 && s.phase === 'playing'; i++) {
     mark('branch:' + closed[0].id)
   }
 
-  if (process.env.TRACE && s.day % 20 === 0) {
-    console.log(`d${String(s.day).padStart(4)} 信者${String(Math.round(t.followers)).padStart(10)} 聖${String(s.priests).padStart(3)} 信仰${t.avgFaith.toFixed(0)} 警戒${s.wariness.toFixed(1)} 資金${(s.funds/1e6).toFixed(0)}M 収支${(fin.net/1e6).toFixed(1)}M 得票${(voteProjection(s,t).share*100).toFixed(1)}%`)
+  if (process.env.TRACE && s.day % 25 === 0) {
+    console.log(`d${String(s.day).padStart(4)} 信者${String(Math.round(t.followers)).padStart(10)} (${(t.nationalShare*100).toFixed(2)}%) 聖${String(s.priests).padStart(3)} 信仰${t.avgFaith.toFixed(0)} 警戒${s.wariness.toFixed(1)} 闇${(s.underworld??0).toFixed(1)} 資金${(s.funds/1e8).toFixed(1)}億 収支${(fin.net/1e8).toFixed(2)}億`)
   }
   for (const n of [1_000, 10_000, 100_000, 1_000_000, 5_000_000, 10_000_000]) {
     if (t.followers >= n) mark('followers:' + n)
+  }
+  for (const n of [5, 10, 20, 30, 50, 100]) {
+    if (s.funds >= n * 1e12) mark(`funds:${n}兆`)
   }
   if (s.election.nextDay) mark('election:scheduled')
 
   if (process.env.DUMP_AT && s.day >= Number(process.env.DUMP_AT)) break
   act('TICK')
+  if (s.phase === 'victory' && process.env.KEEP_GOING) act('CONTINUE_AFTER_VICTORY')
 }
 
 const t = totals(s)
@@ -152,7 +222,8 @@ const y = (n) => n.toLocaleString('ja-JP', { maximumFractionDigits: 0 })
 console.log(`\n=== ${difficulty} / ${home} ===`)
 console.log(`終了: day ${s.day} / phase ${s.phase}` + (s.ending ? ` / ${s.ending.title}` : ''))
 console.log(`信者 ${y(t.followers)}  聖職者 ${s.priests}  平均信仰度 ${t.faithAvg ?? t.avgFaith.toFixed(1)}`)
-console.log(`資金 ${y(s.funds)}円  日次収支 ${y(fin.net)}円  警戒度 ${s.wariness.toFixed(1)}`)
+console.log(`資金 ${y(s.funds)}円  日次収支 ${y(fin.net)}円  警戒度 ${s.wariness.toFixed(1)}  闇度 ${(s.underworld ?? 0).toFixed(1)}`)
+console.log(`全人口比 ${(t.nationalShare * 100).toFixed(2)}%  事業 ${BUSINESSES.filter((b) => s.businesses[b.id]).length}/${BUSINESSES.length}  達成 ${Object.entries(s.achieved ?? {}).map(([k,v])=>`${k}=d${v}`).join(' ') || 'なし'}`)
 console.log(`得票率見込 ${(vp.share * 100).toFixed(1)}%  対抗第一党 ${(vp.rival * 100).toFixed(1)}%`)
 console.log(`施設 ${s.facilities.length}  展開地方 ${REGIONS.filter((r) => s.regions[r.id].unlocked).length}/7`)
 console.log('マイルストーン:', Object.entries(milestones).map(([k, v]) => `${k}=d${v}`).join(' '))

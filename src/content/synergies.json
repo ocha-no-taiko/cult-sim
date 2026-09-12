@@ -112,6 +112,84 @@
         "donation": 0.05,
         "growth": 0.05
       }
+    },
+    {
+      "id": "almsHall",
+      "pair": [
+        "hospital",
+        "hall"
+      ],
+      "name": "施しの場",
+      "desc": "病院の隣で集会を開くと、教団は「助けてくれる場所」として記憶される。",
+      "effect": {
+        "wariness": -0.1,
+        "faith": 0.2
+      }
+    },
+    {
+      "id": "medSchool",
+      "pair": [
+        "hospital",
+        "school"
+      ],
+      "name": "医学の教え",
+      "desc": "病院での実習が神学校の課程に組み込まれる。",
+      "effect": {
+        "convertCap": 3,
+        "churn": -0.03
+      }
+    },
+    {
+      "id": "letters",
+      "pair": [
+        "cultureHall",
+        "press"
+      ],
+      "name": "文と芸",
+      "desc": "教団の機関誌が文芸誌の体裁を得る。",
+      "effect": {
+        "donation": 0.06,
+        "growth": 0.06
+      }
+    },
+    {
+      "id": "amplified",
+      "pair": [
+        "infoRoom",
+        "broadcast"
+      ],
+      "name": "増幅される噂",
+      "desc": "作られた説が電波に乗り、出所を失ったまま広がっていく。",
+      "effect": {
+        "growth": 0.2,
+        "wariness": 0.05
+      }
+    },
+    {
+      "id": "blackLedger",
+      "pair": [
+        "nightOffice",
+        "usuryOffice"
+      ],
+      "name": "裏の帳簿",
+      "desc": "夜の街の現金が、そのまま貸付の原資になる。",
+      "effect": {
+        "income": 400000,
+        "underworld": 0.06
+      }
+    },
+    {
+      "id": "pipeline",
+      "pair": [
+        "refinery",
+        "syndicateRoom"
+      ],
+      "name": "流通網",
+      "desc": "盟約で得た道筋に、精製施設の品が流れ込む。",
+      "effect": {
+        "income": 2000000,
+        "underworld": 0.12
+      }
     }
   ],
   "zones": [

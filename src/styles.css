@@ -284,7 +284,7 @@ h1, h2, h3, .mincho { font-family: var(--mincho); font-weight: 600; letter-spaci
 .log-row.system .t { color: var(--ink-dim); }
 
 /* ── 箱庭マップ ─────────────────────────── */
-.city-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+.city-wrap { display: grid; grid-template-columns: 224px minmax(0, 1fr) 292px; gap: 12px; align-items: start; }
 .city-svg { width: 100%; max-height: 50vh; display: block; background: #101319; border-radius: 3px; }
 .tile-base { fill: #171b22; stroke: #242a34; stroke-width: 1; }
 .tile-base.empty { cursor: pointer; }
@@ -582,3 +582,98 @@ input[type=text]::placeholder { color: var(--ink-faint); font-family: var(--goth
   font-family: var(--gothic);
 }
 .flat-status { font-size: 10px; pointer-events: none; font-family: var(--gothic); }
+
+/* ── 導きの書（進行チェックリスト） ───────── */
+.quest-row { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.7; }
+.quest-row .q-mark { flex-shrink: 0; width: 14px; text-align: center; }
+.quest-row.done { color: var(--ink-faint); text-decoration: line-through; }
+.quest-row.done .q-mark { color: var(--good); text-decoration: none; }
+.quest-row.next { color: var(--ink-faint); }
+.quest-row.current {
+  border-left: 2px solid var(--gold);
+  background: rgba(201, 162, 39, 0.07);
+  padding: 8px 10px;
+  border-radius: 0 3px 3px 0;
+}
+.quest-row.current .q-mark { color: var(--gold); }
+.q-title { font-family: var(--mincho); font-size: 14.5px; color: var(--gold); letter-spacing: 0.04em; }
+.q-detail { color: var(--ink-dim); font-size: 12px; line-height: 1.85; margin-top: 3px; }
+
+/* ── 裏の事業 ───────────────────────────── */
+.shadow-panel { border-color: #3a2630; }
+.shadow-panel .panel-head { color: #d08a9e; }
+.card.shadow { border-color: #3a2630; background: linear-gradient(180deg, rgba(154, 58, 58, 0.07), transparent); }
+.card.shadow .card-name { color: #d9a0ae; }
+.card.shadow.active { border-color: #9a3a3a; }
+
+/* ── シナジーの列 ───────────────────────── */
+.syn-rail { position: relative; }
+.rail-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 7px;
+  border-radius: 3px;
+  cursor: default;
+  font-size: 12.5px;
+}
+.rail-row:hover, .rail-row.on { background: rgba(201, 162, 39, 0.12); }
+.rail-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.rail-dot.adj { background: var(--gold); }
+.rail-dot.zone { background: #5eb8ff; }
+.rail-name { font-family: var(--mincho); letter-spacing: 0.03em; flex: 1; }
+.rail-count { color: var(--gold); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+.rail-card {
+  margin-top: 9px;
+  min-height: 96px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  padding: 9px 11px;
+}
+.rail-card-name { font-family: var(--mincho); font-size: 14.5px; color: var(--gold); letter-spacing: 0.04em; }
+.rail-card-desc { color: var(--ink-dim); font-size: 12px; line-height: 1.8; margin-top: 5px; }
+
+@media (max-width: 1320px) {
+  .city-wrap { grid-template-columns: 1fr; }
+}
+
+/* ── 対戦：他教団 ───────────────────────── */
+.rival {
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: var(--panel-2);
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.rival:hover { border-color: var(--accent); }
+.rival.sel { border-color: var(--accent); background: rgba(200, 69, 47, 0.1); }
+.rival.dead { opacity: 0.45; cursor: default; }
+.rival.dead:hover { border-color: var(--line-soft); }
+.rival-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.rival-name { font-family: var(--mincho); font-size: 14.5px; letter-spacing: 0.04em; }
+.rival-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 10px;
+  font-size: 11.5px;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+  margin-top: 3px;
+}
+.rival-biz { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.rival-biz .eff { font-size: 10.5px; padding: 1px 5px; }
+
+.match-clock {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-right: 1px solid var(--line-soft);
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+.match-clock b { color: var(--gold); font-family: var(--mincho); font-size: 14px; }

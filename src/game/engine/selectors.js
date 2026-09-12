@@ -24,6 +24,9 @@ export function facilityEffects(state) {
 
 /** 教祖が巡回説法などで拘束されているか */
 export function founderBusyOn(state) {
+  if ((state.founderInjuredUntil ?? 0) > state.day) {
+    return { kind: 'injured', label: '療養', until: state.founderInjuredUntil }
+  }
   if (state.founder != null) {
     const f = state.facilities.find((x) => x.uid === state.founder)
     return { kind: 'facility', label: f ? FACILITY_MAP[f.type].name : '施設', uid: state.founder }

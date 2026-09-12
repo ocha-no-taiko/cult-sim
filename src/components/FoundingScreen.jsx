@@ -3,7 +3,7 @@ import DoctrineEditor from './DoctrineEditor.jsx'
 import { REGION_MAP } from '../game/data/regions.js'
 import { yen, orderName } from '../game/format.js'
 
-export default function FoundingScreen({ state, act, onBack }) {
+export default function FoundingScreen({ state, act, onBack, onBegin }) {
   const region = REGION_MAP[state.homeRegion]
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 40 }}>
@@ -32,7 +32,7 @@ export default function FoundingScreen({ state, act, onBack }) {
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 26 }}>
           <button className="btn ghost" onClick={onBack}>拠点を選び直す</button>
-          <button className="btn primary" style={{ padding: '9px 34px' }} onClick={() => act('BEGIN_PREACHING')}>
+          <button className="btn primary" style={{ padding: '9px 34px' }} onClick={onBegin}>
             この教義で開教する
           </button>
         </div>

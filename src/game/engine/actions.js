@@ -4,6 +4,7 @@ import { AXIS_IDS } from '../data/doctrine.js'
 import { FACILITY_MAP, BUSINESS_MAP } from '../data/facilities.js'
 import { MISSION_MAP } from '../data/missions.js'
 import { createInitialState, defaultBusinessNames } from './state.js'
+import ENDINGS from '../../content/endings.json' with { type: 'json' }
 import { advanceDay } from './tick.js'
 import {
   isFounderFree, priestsFree, totals, priestCost, convertCapacity,
@@ -62,6 +63,18 @@ export function reducer(state, action) {
     case 'TICK': {
       if (state.phase !== 'playing') return state
       return advanceDay(state)
+    }
+
+    // 共通の時計に追いつく（まとめて進めるが、1回の上限を決めて固まらせない）
+    case 'TICK_TO': {
+      if (state.phase !== 'playing') return state
+      let s = state
+      let guard = 0
+      while (s.day < action.payload && s.phase === 'playing' && guard < 40) {
+        s = advanceDay(s)
+        guard += 1
+      }
+      return s
     }
 
     case 'SET_SPEED': {
@@ -178,6 +191,10 @@ export function reducer(state, action) {
       if (!f) return state
       const def = FACILITY_MAP[f.type]
       if (def.alwaysActive) return state
+      // すでにその状態なら何もしない（日誌が同じ行で埋まるのを防ぐ）
+      if (mode === 'founder' && f.staff === 'founder' && state.founder === uid) return state
+      if (mode === 'priests' && f.staff === 'priests') return state
+      if (mode === 'none' && f.staff === 'none') return state
 
       const s = clone(state)
       const target = s.facilities.find((x) => x.uid === uid)
@@ -341,8 +358,74 @@ export function reducer(state, action) {
       s.phase = 'playing'
       s.ending = null
       s.speed = 0
-      s.election.nextDay = s.day + ELECTION_RETRY_DAYS
-      log(s, 'system', `国教化を果たしたまま教団の経営を続ける。次の総選挙は${ELECTION_RETRY_DAYS}日後。`)
+      if (s.businesses.party && (!s.election.nextDay || s.election.nextDay <= s.day)) {
+        s.election.nextDay = s.day + ELECTION_RETRY_DAYS
+      }
+      log(s, 'system', '決着のあとも、教団の経営は続く。')
+      return s
+    }
+
+    // ── 対戦でのみ使う行動 ──────────────────────────
+    case 'SET_MULTIPLAYER':
+      return { ...state, multiplayer: !!action.payload }
+
+    case 'PAY_ASSASSINATION': {
+      // 暗殺を差し向けた側の代償（判定自体はサーバが行う）
+      const { cost = 0, underworld = 0, note } = action.payload ?? {}
+      const s = clone(state)
+      spend(s, cost)
+      s.underworld = Math.min(100, s.underworld + underworld)
+      if (note) log(s, 'bad', note)
+      return s
+    }
+
+    case 'KILLED_BY': {
+      if (state.phase !== 'playing') return state
+      const { type = 'rivalAssassin', by = '何者か' } = action.payload ?? {}
+      const s = clone(state)
+      const def = ENDINGS[type] ?? { title: '敗北', text: '' }
+      s.phase = 'gameover'
+      s.speed = 0
+      s.ending = { type, title: def.title, text: (def.text ?? '').replaceAll('{by}', by), kind: 'defeat' }
+      log(s, 'bad', `【${def.title}】${s.ending.text}`)
+      return s
+    }
+
+    case 'OUTPACED': {
+      const { by = '他の教団', ending = '' } = action.payload ?? {}
+      const s = clone(state)
+      const def = ENDINGS.outpaced
+      s.phase = 'gameover'
+      s.speed = 0
+      s.ending = { type: 'outpaced', title: def.title, text: def.text.replaceAll('{by}', by), kind: 'defeat', rivalEnding: ending }
+      log(s, 'warn', `【${def.title}】${s.ending.text}`)
+      return s
+    }
+
+    case 'CLEAR_CLAIM':
+      return { ...state, pendingClaim: null }
+
+    case 'MATCH_RESULT': {
+      const { win, ending, by } = action.payload ?? {}
+      const s = clone(state)
+      s.speed = 0
+      if (win) {
+        const def = ENDINGS[ending] ?? { title: '勝利', text: '' }
+        s.phase = 'victory'
+        s.achieved = { ...(s.achieved ?? {}), [ending]: s.day }
+        s.ending = { type: ending, title: def.title, text: def.text.replaceAll('{by}', by ?? ''), kind: 'victory' }
+        log(s, 'good', `【${def.title}】この対戦を制した。`)
+      } else {
+        const def = ENDINGS.outpaced
+        s.phase = 'gameover'
+        s.ending = {
+          type: 'outpaced',
+          title: def.title,
+          text: def.text.replaceAll('{by}', by ?? '他の教団'),
+          kind: 'defeat',
+        }
+        log(s, 'warn', `【${def.title}】${s.ending.text}`)
+      }
       return s
     }
 

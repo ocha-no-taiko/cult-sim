@@ -56,7 +56,7 @@ export default function TipCard({ id }) {
 }
 
 /** すべての手引きをまとめて読む */
-export function HelpModal({ onClose }) {
+export function HelpModal({ onClose, onOpening }) {
   const { resetAll } = useTips()
   return (
     <div className="modal-bg" onClick={onClose}>
@@ -74,6 +74,7 @@ export function HelpModal({ onClose }) {
           ))}
         </div>
         <div className="modal-foot">
+          {onOpening && <button className="btn ghost" onClick={onOpening}>最初の手引きを読み直す</button>}
           <button className="btn ghost" onClick={resetAll}>各画面の手引きを再表示する</button>
           <button className="btn primary" onClick={onClose}>閉じる</button>
         </div>

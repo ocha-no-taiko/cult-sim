@@ -147,14 +147,15 @@
     "requires": "foundation",
     "effect": {
       "wariness": -0.7,
-      "churn": -0.06
+      "churn": -0.06,
+      "underworld": -0.08
     },
     "look": {
       "height": 40,
       "color": "#5aa88a",
       "roof": "flat"
     },
-    "tip": "教団に一つだけ置ける。稼働している間ずっと警戒度を引き下げる。外周や集会所の隣だとさらに効く。"
+    "tip": "教団に一つだけ置ける。稼働している間ずっと警戒度を引き下げる。外周や集会所の隣だとさらに効く。表の顔を厚くするので、闇度もわずかに薄まる。"
   },
   "partyHQ": {
     "name": "党本部",
@@ -174,5 +175,154 @@
       "roof": "flat"
     },
     "tip": "組織票のとりまとめ効率を上げる。財団事務局と隣接させると票と評判が同時に動く。"
+  },
+  "hospital": {
+    "name": "慈恵病院",
+    "icon": "🏥",
+    "desc": "無償の診療所を開く。街の人が教団の門をくぐる理由になり、世間の目も和らぐ。",
+    "tip": "警戒度を下げる数少ない手のひとつ。財団と併せると、かなり無茶な拡大にも耐えられるようになる。表の顔を厚くするので、闇度もわずかに薄まる。",
+    "cost": 55000000,
+    "upkeep": 480000,
+    "priests": 5,
+    "requires": "welfare",
+    "effect": {
+      "wariness": -0.25,
+      "faith": 0.5,
+      "churn": -0.08,
+      "income": 380000,
+      "underworld": -0.05
+    },
+    "look": {
+      "height": 44,
+      "color": "#6fa8b0",
+      "roof": "flat"
+    }
+  },
+  "cultureHall": {
+    "name": "文化会館",
+    "icon": "🎭",
+    "desc": "美術館と音楽堂を兼ねた施設。教団に文化的な後ろ盾を与える。",
+    "tip": "芸術は教団を「まっとうな組織」に見せる。お布施の伸びと警戒度の低下を同時に取れる。",
+    "cost": 40000000,
+    "upkeep": 350000,
+    "priests": 4,
+    "requires": "arts",
+    "effect": {
+      "wariness": -0.12,
+      "donation": 0.14,
+      "growth": 0.1,
+      "income": 220000,
+      "underworld": -0.04
+    },
+    "look": {
+      "height": 48,
+      "color": "#c08a9e",
+      "roof": "dome"
+    }
+  },
+  "infoRoom": {
+    "name": "情報工作室",
+    "icon": "🕵",
+    "desc": "匿名の書き手を束ね、都合のよい説を世に流す。出所は決して辿れない。",
+    "tip": "裏の事業の入口。獲得は伸びるが、教団の裏の顔（闇度）が静かに濃くなっていく。",
+    "cost": 18000000,
+    "upkeep": 200000,
+    "priests": 3,
+    "requires": "conspiracy",
+    "effect": {
+      "growth": 0.35,
+      "wariness": 0.1,
+      "underworld": 0.1
+    },
+    "look": {
+      "height": 30,
+      "color": "#6b6f8a",
+      "roof": "flat"
+    }
+  },
+  "nightOffice": {
+    "name": "歓楽街事務所",
+    "icon": "🎰",
+    "desc": "夜の街の上がりを教団の会計に通す。教義との整合は問わない。",
+    "tip": "金は入るが信仰は濁る。信仰度が落ちるとお布施の単価も下がるので、道場との併用が要る。",
+    "cost": 30000000,
+    "upkeep": 300000,
+    "priests": 4,
+    "requires": "nightlife",
+    "effect": {
+      "income": 900000,
+      "donation": 0.05,
+      "faith": -0.35,
+      "underworld": 0.18
+    },
+    "look": {
+      "height": 36,
+      "color": "#b06a8a",
+      "roof": "flat"
+    }
+  },
+  "usuryOffice": {
+    "name": "金融事務所",
+    "icon": "💴",
+    "desc": "信者にも信者でない者にも貸す。返済の取り立ては教団の名で行われる。",
+    "tip": "収入は跳ね上がるが、取り立ての噂が離脱を招き、闇度も一気に濃くなる。",
+    "cost": 45000000,
+    "upkeep": 400000,
+    "priests": 4,
+    "requires": "usury",
+    "effect": {
+      "income": 2200000,
+      "churn": 0.06,
+      "underworld": 0.26,
+      "wariness": 0.06
+    },
+    "look": {
+      "height": 50,
+      "color": "#8a7a4a",
+      "roof": "flat"
+    }
+  },
+  "refinery": {
+    "name": "精製施設",
+    "icon": "⚗",
+    "desc": "教団の敷地の奥、誰も立ち入れない棟。帳簿には「研究所」とだけ書かれている。",
+    "tip": "収入は桁違いだが、信仰は崩れ、闇度は急騰する。暗殺の危険が現実になる領域。",
+    "cost": 70000000,
+    "upkeep": 700000,
+    "priests": 5,
+    "requires": "narcotics",
+    "effect": {
+      "income": 6000000,
+      "faith": -0.8,
+      "churn": 0.1,
+      "underworld": 0.45,
+      "wariness": 0.14
+    },
+    "look": {
+      "height": 40,
+      "color": "#7a9a5a",
+      "roof": "antenna"
+    }
+  },
+  "syndicateRoom": {
+    "name": "盟約の間",
+    "icon": "🩸",
+    "desc": "教団と裏社会が杯を交わす部屋。ここから先、教団はもう宗教団体ではない。",
+    "tip": "暴力による動員が票に乗る。闇度が振り切れると、国家転覆という別の結末に手が届く。",
+    "cost": 150000000,
+    "upkeep": 1500000,
+    "priests": 8,
+    "requires": "syndicate",
+    "effect": {
+      "votePower": 0.25,
+      "underworld": 0.55,
+      "wariness": 0.1,
+      "growth": 0.2
+    },
+    "look": {
+      "height": 58,
+      "color": "#9a3a3a",
+      "roof": "tower"
+    }
   }
 }

@@ -42,24 +42,26 @@ function RuleRow({ rule, count }) {
   )
 }
 
-export default function SynergyPanel({ city, showSynergy, onToggleShow }) {
-  const [openAll, setOpenAll] = useState(false)
+export default function SynergyPanel({ city, showSynergy, onToggleShow, embedded = false }) {
+  const [openAll, setOpenAll] = useState(embedded)
   const active = summarizeSynergies(city)
   const counts = Object.fromEntries(active.map((a) => [a.rule.id, a.count]))
   const all = [...ZONE_RULES, ...ADJACENCY_RULES]
   const list = openAll ? all : all.filter((r) => counts[r.id] > 0)
 
   return (
-    <div className="panel">
-      <div className="panel-head">
-        配置シナジー
-        <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <span className="tag on">成立 {active.length}種</span>
-          <button className="btn sm ghost" onClick={onToggleShow}>
-            {showSynergy ? '線を隠す' : '線を表示'}
-          </button>
-        </span>
-      </div>
+    <div className={embedded ? '' : 'panel'}>
+      {!embedded && (
+        <div className="panel-head">
+          配置シナジー
+          <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span className="tag on">成立 {active.length}種</span>
+            <button className="btn sm ghost" onClick={onToggleShow}>
+              {showSynergy ? '線を隠す' : '線を表示'}
+            </button>
+          </span>
+        </div>
+      )}
       <div className="panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
         {list.length === 0 && (
           <div className="faint" style={{ fontSize: 12, lineHeight: 1.9 }}>
@@ -68,9 +70,11 @@ export default function SynergyPanel({ city, showSynergy, onToggleShow }) {
           </div>
         )}
         {list.map((r) => <RuleRow key={r.id} rule={r} count={counts[r.id] ?? 0} />)}
-        <button className="btn sm ghost" onClick={() => setOpenAll((v) => !v)}>
-          {openAll ? '成立中のみ表示' : `すべての組み合わせを見る（${all.length}種）`}
-        </button>
+        {!embedded && (
+          <button className="btn sm ghost" onClick={() => setOpenAll((v) => !v)}>
+            {openAll ? '成立中のみ表示' : `すべての組み合わせを見る（${all.length}種）`}
+          </button>
+        )}
       </div>
     </div>
   )

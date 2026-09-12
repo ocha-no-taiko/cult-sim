@@ -13,6 +13,8 @@
 | `clusters.json` | 信者クラスタ。名前・性格文・色・お布施額・離脱率・教義への感応度 |
 | `doctrine.json` | 教義4軸の名前と両端のラベル、説明 |
 | `events.json` | ランダムイベントの名前・本文・抽選重み（発生条件と効果は `src/game/data/events.js`） |
+| `endings.json` | 決着の条件と文言（勝利4種・敗北3種）。到達に必要な金額や割合もここ |
+| `quests.json` | 「導きの書」の手順の文言（達成判定は `src/components/QuestPanel.jsx`） |
 | `tips.json` | 各画面の手引きカード |
 
 ## 施設（facilities.json）
@@ -47,6 +49,7 @@
 | `incomePerPriest` | 聖職者1人あたりの日次収入（円） |
 | `convertCap` | 1日に聖職者へ転向できる人数 |
 | `votePower` | 得票係数への加算 |
+| `underworld` | 闇度の日次変化（裏の事業の施設だけが持つ） |
 
 `look` は等角表示の見た目。`roof` は `flat` / `gable` / `dome` / `tower` / `antenna`。
 
@@ -71,6 +74,22 @@
 
 `adjacency` は同じ種類どうし（`["missionPost","missionPost"]`）も書ける。
 ペアは成立するたびに加算されるので、3棟を並べれば2組ぶん効く。
+
+## 決着の条件（endings.json）
+
+```jsonc
+"conglomerate": {
+  "kind": "victory",
+  "title": "コングロマリット",
+  "text": "…{businesses}…{funds}…",   // {share} {party} {order} {businesses} {funds} を差し込める
+  "hint": "一覧に出る一行説明",
+  "requireAllBusinesses": true,
+  "requireFunds": 30000000000000      // ここを 100000000000000 にすれば100兆円エンドになる
+}
+```
+
+`requireShare`（全人口比）、`requireUnderworld`・`requireFollowers`・`requireBusiness`（裏ルート）も同様に調整できる。
+敗北側（`bankrupt` / `raid` / `assassinated`）は文言のみ。
 
 ## 注意
 

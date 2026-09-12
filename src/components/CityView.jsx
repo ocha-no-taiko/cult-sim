@@ -7,6 +7,7 @@ import { yen, facilityLabel } from '../game/format.js'
 import PriestPanel from './PriestPanel.jsx'
 import CityMap from './CityMap.jsx'
 import SynergyPanel from './SynergyPanel.jsx'
+import SynergyRail from './SynergyRail.jsx'
 import TipCard from './TipCard.jsx'
 
 const BUSINESS_LABEL = { publishing: '出版', education: '教育', foundation: '財団', party: '政党' }
@@ -45,6 +46,8 @@ const short = (s, n = 7) => (s.length > n ? `${s.slice(0, n)}…` : s)
 export default function CityView({ state, act, totals: t }) {
   const [sel, setSel] = useState(null) // {x,y}
   const [showSynergy, setShowSynergy] = useState(true)
+  const [hovered, setHovered] = useState(null)
+  const [allSynergies, setAllSynergies] = useState(false)
   const [mapMode, setMapMode] = useState(() => {
     try { return localStorage.getItem(MAP_MODE_KEY) === 'flat' ? 'flat' : 'iso' } catch { return 'iso' }
   })
@@ -73,6 +76,13 @@ export default function CityView({ state, act, totals: t }) {
       <TipCard id="city" />
       <TipCard id="founder" />
       <div className="city-wrap">
+        <SynergyRail
+          city={city}
+          hovered={hovered}
+          onHover={setHovered}
+          onOpenAll={() => setAllSynergies(true)}
+        />
+
         <div className="panel">
           <div className="panel-head">
             宗教都市
@@ -98,6 +108,7 @@ export default function CityView({ state, act, totals: t }) {
               selected={sel}
               showSynergy={showSynergy}
               mode={mapMode}
+              highlight={hovered}
               onSelect={setSel}
               onMove={(uid, x, y) => act('MOVE_FACILITY', { uid, x, y })}
             />
@@ -261,7 +272,22 @@ export default function CityView({ state, act, totals: t }) {
         </div>
       </div>
 
-      <SynergyPanel city={city} showSynergy={showSynergy} onToggleShow={() => setShowSynergy((v) => !v)} />
+      {allSynergies && (
+        <div className="modal-bg" onClick={() => setAllSynergies(false)}>
+          <div
+            className="modal" style={{ maxWidth: 640, maxHeight: '84vh', display: 'flex', flexDirection: 'column' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-head">配置シナジーの一覧</div>
+            <div style={{ overflowY: 'auto' }}>
+              <SynergyPanel city={city} showSynergy={showSynergy} onToggleShow={() => setShowSynergy((v) => !v)} embedded />
+            </div>
+            <div className="modal-foot">
+              <button className="btn primary" onClick={() => setAllSynergies(false)}>閉じる</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

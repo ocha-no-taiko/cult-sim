@@ -6,7 +6,8 @@
     "cost": 5000000,
     "unlock": {
       "followers": 400
-    }
+    },
+    "shadow": false
   },
   "education": {
     "name": "教育事業",
@@ -16,6 +17,18 @@
     "unlock": {
       "followers": 8000,
       "business": "publishing"
+    },
+    "shadow": false
+  },
+  "welfare": {
+    "name": "医療福祉事業",
+    "icon": "🏥",
+    "shadow": false,
+    "desc": "病院と福祉施設を運営する。慈恵病院を建てられるようになり、世間の警戒が和らぐ。",
+    "cost": 45000000,
+    "unlock": {
+      "followers": 40000,
+      "business": "education"
     }
   },
   "foundation": {
@@ -26,6 +39,18 @@
     "unlock": {
       "followers": 80000,
       "business": "education"
+    },
+    "shadow": false
+  },
+  "arts": {
+    "name": "芸術文化事業",
+    "icon": "🎭",
+    "shadow": false,
+    "desc": "美術と音楽の財を持つ。文化会館を建てられるようになり、教団に社会的な格がつく。",
+    "cost": 60000000,
+    "unlock": {
+      "followers": 300000,
+      "business": "foundation"
     }
   },
   "party": {
@@ -36,6 +61,62 @@
     "unlock": {
       "followers": 1500000,
       "business": "foundation"
+    },
+    "shadow": false
+  },
+  "conspiracy": {
+    "name": "情報工作",
+    "icon": "🕵",
+    "shadow": true,
+    "desc": "表に出ない書き手を抱え、世論を都合よく曲げる。裏の事業の入口。",
+    "cost": 12000000,
+    "unlock": {
+      "followers": 5000,
+      "business": "publishing"
+    }
+  },
+  "nightlife": {
+    "name": "歓楽事業",
+    "icon": "🎰",
+    "shadow": true,
+    "desc": "夜の街の収益を教団に流す。金は入るが、信仰は濁る。",
+    "cost": 25000000,
+    "unlock": {
+      "followers": 30000,
+      "business": "conspiracy"
+    }
+  },
+  "usury": {
+    "name": "金融事業",
+    "icon": "💴",
+    "shadow": true,
+    "desc": "法の外側で貸し、教団の名で取り立てる。収入は跳ね上がる。",
+    "cost": 40000000,
+    "unlock": {
+      "followers": 100000,
+      "business": "nightlife"
+    }
+  },
+  "narcotics": {
+    "name": "薬物流通",
+    "icon": "⚗",
+    "shadow": true,
+    "desc": "帳簿に載らない品を捌く。桁違いの金と引き換えに、教団は後戻りできなくなる。",
+    "cost": 80000000,
+    "unlock": {
+      "followers": 400000,
+      "business": "usury"
+    }
+  },
+  "syndicate": {
+    "name": "暴力団との盟約",
+    "icon": "🩸",
+    "shadow": true,
+    "desc": "裏社会と杯を交わす。暴力が票になり、国家転覆という別の結末が視界に入る。",
+    "cost": 300000000,
+    "unlock": {
+      "followers": 2000000,
+      "business": "narcotics"
     }
   }
 }

@@ -4,7 +4,7 @@ import { REGIONS } from '../game/data/regions.js'
 
 export default function EndingModal({ state, totals: t, onTitle, onDismiss, onContinue }) {
   const e = state.ending
-  const win = e.type === 'victory'
+  const win = e.kind === 'victory'
   const open = REGIONS.filter((r) => state.regions[r.id].unlocked).length
 
   return (
@@ -41,7 +41,7 @@ export default function EndingModal({ state, totals: t, onTitle, onDismiss, onCo
         </div>
         <div className="modal-foot">
           <button className="btn ghost" onClick={onTitle}>タイトルに戻る</button>
-          {win ? (
+          {win && onContinue ? (
             <>
               <button className="btn ghost" onClick={onDismiss}>記録を眺める</button>
               <button className="btn primary" onClick={onContinue}>この国を統べ続ける</button>
