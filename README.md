@@ -1,6 +1,6 @@
 # CULT ~Congregation Under Local Tycoon~
 
-**▶ [ブラウザで遊ぶ](https://ocha-no-taiko.github.io/cult-sim/)**
+**▶ [ブラウザで遊ぶ](https://ocha-no-taiko.github.io/cult-sim/)**　|　**📖 [攻略書](GUIDE.md)**
 
 新興宗教の教祖となり、教義を設計し、布教で信者を集め、事業と宗教都市を広げ、
 最終的に政党を第一与党へ押し上げる（＝国教化する）ブラウザ経営シミュレーション。

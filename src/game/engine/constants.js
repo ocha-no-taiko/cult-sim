@@ -56,13 +56,9 @@ export const UNDERWORLD_STAGES = [
   { at: 90, label: '命の危険', text: 'いつ消されてもおかしくない。教祖自身がそれを分かっている。' },
 ]
 
-// 国教化以外の決着
-export const CONGLOMERATE_FUNDS = 100_000_000_000_000  // 100兆円
-export const CONGREGATION_SHARE = 0.50                 // 全人口に占める信者の割合
+// 国教化以外の決着の条件は src/content/endings.json 側にある（requireFunds など）。
 // 国教化すると布教が制度に組み込まれ、地方ごとの上限が上がる
 export const STATE_RELIGION_CAP_BONUS = 1.55
-export const UPRISING_UNDERWORLD = 95
-export const UPRISING_FOLLOWERS = 5_000_000
 
 export const WARINESS_STAGES = [
   { at: 35, label: 'メディアの注目', text: '週刊誌が教団の名を出し始めた。' },
