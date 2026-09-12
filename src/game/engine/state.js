@@ -14,9 +14,36 @@ function emptyRegionClusters(faith) {
 export const DEFAULT_ORDER_NAME = '天啓会'
 
 /** 教団名から各事業の既定名を導く */
+/** 事業idと、その事業でつける名前の保存先キーの対応 */
+export const BUSINESS_NAME_KEY = {
+  publishing: 'press',
+  education: 'school',
+  welfare: 'hospital',
+  foundation: 'foundation',
+  arts: 'culture',
+  party: 'party',
+  conspiracy: 'info',
+  nightlife: 'night',
+  usury: 'usury',
+  narcotics: 'lab',
+  syndicate: 'syndicate',
+}
+
 export function defaultBusinessNames(order) {
   const base = order || DEFAULT_ORDER_NAME
-  return { press: `${base}出版`, school: `${base}学園`, foundation: `${base}財団`, party: `${base}党` }
+  return {
+    press: `${base}出版`,
+    school: `${base}学園`,
+    hospital: `${base}病院`,
+    foundation: `${base}財団`,
+    culture: `${base}美術館`,
+    party: `${base}党`,
+    info: `${base}通信`,
+    night: `${base}興業`,
+    usury: `${base}ファイナンス`,
+    lab: `${base}研究所`,
+    syndicate: `${base}会`,
+  }
 }
 
 export function createInitialState({ difficulty = 'normal', homeRegionId = 'kanto', orderName = DEFAULT_ORDER_NAME } = {}) {

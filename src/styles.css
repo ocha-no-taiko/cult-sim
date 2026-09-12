@@ -677,3 +677,19 @@ input[type=text]::placeholder { color: var(--ink-faint); font-family: var(--goth
   color: var(--ink-dim);
 }
 .match-clock b { color: var(--gold); font-family: var(--mincho); font-size: 14px; }
+
+/* ── 不具合表示 ─────────────────────────── */
+.crash-detail {
+  background: #101319;
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
+  overflow: auto;
+  margin: 0;
+}

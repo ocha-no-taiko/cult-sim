@@ -5,17 +5,13 @@ import {
   businessAvailable, facilityEffects, isFacilityActive, voteProjection,
   convertCapacity, isFounderFree,
 } from '../game/engine/selectors.js'
-import { defaultBusinessNames } from '../game/engine/state.js'
+import { defaultBusinessNames, BUSINESS_NAME_KEY } from '../game/engine/state.js'
 import { yen, people, pct } from '../game/format.js'
 import PriestPanel from './PriestPanel.jsx'
 import FounderRelease from './FounderRelease.jsx'
 import TipCard from './TipCard.jsx'
 
-const NAME_KEY = {
-  publishing: 'press', education: 'school', foundation: 'foundation', party: 'party',
-  welfare: 'hospital', arts: 'culture',
-  conspiracy: 'info', nightlife: 'night', usury: 'usury', narcotics: 'lab', syndicate: 'syndicate',
-}
+const NAME_KEY = BUSINESS_NAME_KEY
 const NAME_LABEL = {
   publishing: '出版局の名', education: '学校の名', foundation: '財団の名', party: '政党の名',
   welfare: '病院の名', arts: '文化施設の名',
@@ -46,7 +42,7 @@ function countActive(state, typeId) {
 /** 事業名を後から変更する行 */
 function RenameRow({ state, act, bizId }) {
   const key = NAME_KEY[bizId]
-  const [draft, setDraft] = useState(state.names[key] ?? '')
+  const [draft, setDraft] = useState(() => state.names?.[key] ?? '')
   const changed = draft.trim() && draft.trim() !== state.names[key]
   return (
     <div style={{ maxWidth: 380 }}>
@@ -217,7 +213,9 @@ function Detail({ id, state, act, totals: t }) {
 /** 設立時に名前をつけるダイアログ */
 function NamingDialog({ biz, state, onCancel, onConfirm }) {
   const key = NAME_KEY[biz.id]
-  const [name, setName] = useState(state.names[key] || defaultBusinessNames(state.names.order)[key])
+  const [name, setName] = useState(
+    () => state.names?.[key] || defaultBusinessNames(state.names?.order)[key] || biz.name,
+  )
   return (
     <div className="modal-bg" onClick={onCancel}>
       <div className="modal" style={{ maxWidth: 440 }} onClick={(e) => e.stopPropagation()}>

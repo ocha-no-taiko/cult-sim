@@ -46,8 +46,15 @@ export function dayLabel(day) {
 const FACILITY_NAME_KEY = {
   press: 'press',
   school: 'school',
+  hospital: 'hospital',
   foundationOffice: 'foundation',
+  cultureHall: 'culture',
   partyHQ: 'party',
+  infoRoom: 'info',
+  nightOffice: 'night',
+  usuryOffice: 'usury',
+  refinery: 'lab',
+  syndicateRoom: 'syndicate',
 }
 
 export function facilityLabel(state, typeId, fallback) {

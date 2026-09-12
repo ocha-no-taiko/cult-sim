@@ -3,7 +3,7 @@ import { CLUSTERS } from '../data/clusters.js'
 import { AXIS_IDS } from '../data/doctrine.js'
 import { FACILITY_MAP, BUSINESS_MAP } from '../data/facilities.js'
 import { MISSION_MAP } from '../data/missions.js'
-import { createInitialState, defaultBusinessNames } from './state.js'
+import { createInitialState, defaultBusinessNames, BUSINESS_NAME_KEY } from './state.js'
 import ENDINGS from '../../content/endings.json' with { type: 'json' }
 import { advanceDay } from './tick.js'
 import {
@@ -271,8 +271,8 @@ export function reducer(state, action) {
       const s = clone(state)
       spend(s, b.cost)
       s.businesses[bizId] = true
-      const nameKey = { publishing: 'press', education: 'school', foundation: 'foundation', party: 'party' }[bizId]
-      const fallback = defaultBusinessNames(s.names.order)[nameKey]
+      const nameKey = BUSINESS_NAME_KEY[bizId]
+      const fallback = defaultBusinessNames(s.names.order)[nameKey] || b.name
       const label = String(givenName ?? '').trim().slice(0, 16) || s.names[nameKey] || fallback
       s.names[nameKey] = label
       log(s, 'good', `${b.name}として「${label}」を設立した。`)
