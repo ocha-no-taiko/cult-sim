@@ -1,0 +1,41 @@
+{
+  "publishing": {
+    "name": "出版事業",
+    "icon": "📰",
+    "desc": "新聞・書籍の刊行を始める。出版局と放送局の建設が解禁される。",
+    "cost": 5000000,
+    "unlock": {
+      "followers": 400
+    }
+  },
+  "education": {
+    "name": "教育事業",
+    "icon": "🎓",
+    "desc": "学校法人を設立する。神学校を建て、信者を聖職者へ転向させられるようになる。",
+    "cost": 25000000,
+    "unlock": {
+      "followers": 8000,
+      "business": "publishing"
+    }
+  },
+  "foundation": {
+    "name": "財団",
+    "icon": "🤝",
+    "desc": "公益財団を設立する。世間の警戒度が常時大幅に下がる。",
+    "cost": 75000000,
+    "unlock": {
+      "followers": 80000,
+      "business": "education"
+    }
+  },
+  "party": {
+    "name": "政党",
+    "icon": "🗳",
+    "desc": "政党を設立し、政治参加フェーズへ。設立から一定期間後に総選挙が行われる。",
+    "cost": 400000000,
+    "unlock": {
+      "followers": 1500000,
+      "business": "foundation"
+    }
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "adjacency": [
+    {
+      "id": "mediaPair",
+      "pair": [
+        "press",
+        "broadcast"
+      ],
+      "name": "紙と電波",
+      "desc": "出版局と放送局を隣り合わせると、同じ言葉が二重に届く。",
+      "effect": {
+        "growth": 0.12,
+        "income": 60000
+      }
+    },
+    {
+      "id": "gatherTrain",
+      "pair": [
+        "hall",
+        "dojo"
+      ],
+      "name": "集いと修練",
+      "desc": "集会所の隣に道場があると、集まった者がそのまま行に入る。",
+      "effect": {
+        "faith": 0.45,
+        "churn": -0.03
+      }
+    },
+    {
+      "id": "textbook",
+      "pair": [
+        "school",
+        "press"
+      ],
+      "name": "教本と講堂",
+      "desc": "刷り上がった教本がそのまま教材になり、聖職者が育ちやすくなる。",
+      "effect": {
+        "convertCap": 4
+      }
+    },
+    {
+      "id": "studyAscesis",
+      "pair": [
+        "school",
+        "dojo"
+      ],
+      "name": "学と行",
+      "desc": "学問と修行を同じ敷地で修めさせる。",
+      "effect": {
+        "convertCap": 3,
+        "faith": 0.25
+      }
+    },
+    {
+      "id": "openGate",
+      "pair": [
+        "foundationOffice",
+        "hall"
+      ],
+      "name": "開かれた門",
+      "desc": "財団の窓口が集会所に面していると、教団の顔が柔らかく見える。",
+      "effect": {
+        "wariness": -0.1
+      }
+    },
+    {
+      "id": "missionNet",
+      "pair": [
+        "missionPost",
+        "missionPost"
+      ],
+      "name": "布教の網",
+      "desc": "布教所どうしが連なると、受け持つ街区が途切れなくなる。",
+      "effect": {
+        "growth": 0.06
+      }
+    },
+    {
+      "id": "frontAndBack",
+      "pair": [
+        "partyHQ",
+        "foundationOffice"
+      ],
+      "name": "表と裏",
+      "desc": "政治の司令塔と慈善の窓口が隣接し、票と評判が同時に動く。",
+      "effect": {
+        "votePower": 0.1,
+        "wariness": -0.03
+      }
+    },
+    {
+      "id": "broadcastHall",
+      "pair": [
+        "broadcast",
+        "hall"
+      ],
+      "name": "中継される集会",
+      "desc": "集会の熱がそのまま電波に乗り、遠くの信者の財布も開く。",
+      "effect": {
+        "donation": 0.07
+      }
+    },
+    {
+      "id": "bulletin",
+      "pair": [
+        "press",
+        "hall"
+      ],
+      "name": "会報の手渡し",
+      "desc": "刷りたての会報が集会でそのまま配られる。",
+      "effect": {
+        "donation": 0.05,
+        "growth": 0.05
+      }
+    }
+  ],
+  "zones": [
+    {
+      "id": "halo",
+      "kind": "halo",
+      "name": "本部の威光",
+      "desc": "教会本部に接する8区画に置かれた施設は、その効果が15%増しになる。",
+      "mult": 1.15
+    },
+    {
+      "id": "hqCenter",
+      "kind": "hqCenter",
+      "name": "中心に坐す本部",
+      "desc": "教会本部を都市の中央に据えると、すべての施設の効果が4%増しになる。",
+      "mult": 1.04
+    },
+    {
+      "id": "edgeMission",
+      "kind": "edge",
+      "types": [
+        "missionPost"
+      ],
+      "name": "街との境",
+      "desc": "都市の外周に置いた布教所は往来に面し、布教がよく伸びる。",
+      "effect": {
+        "growth": 0.07
+      }
+    },
+    {
+      "id": "edgeMedia",
+      "kind": "edge",
+      "types": [
+        "press",
+        "broadcast"
+      ],
+      "name": "流通の縁",
+      "desc": "外周にある出版局・放送局は搬出と送信がしやすく、収益が増す。",
+      "effect": {
+        "income": 60000
+      }
+    },
+    {
+      "id": "edgeFoundation",
+      "kind": "edge",
+      "types": [
+        "foundationOffice"
+      ],
+      "name": "地域に開いた窓口",
+      "desc": "外周の財団事務局は市民が訪ねやすく、世間の警戒をいっそう和らげる。",
+      "effect": {
+        "wariness": -0.08
+      }
+    }
+  ]
+}

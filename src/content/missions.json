@@ -1,0 +1,182 @@
+{
+  "street": {
+    "name": "街頭布教",
+    "desc": "駅前に立ち、通行人に語りかける。すべての布教の基本。",
+    "layer": "followers",
+    "mode": "sustained",
+    "unlock": {
+      "followers": 0
+    },
+    "effect": {
+      "growth": 0.15,
+      "flatRecruit": 8,
+      "wariness": 0.02
+    },
+    "dailyCost": 10000
+  },
+  "doorToDoor": {
+    "name": "戸別訪問",
+    "desc": "一軒ずつ戸を叩く。効率は良いが、煙たがられもする。",
+    "layer": "followers",
+    "mode": "sustained",
+    "unlock": {
+      "followers": 500
+    },
+    "effect": {
+      "growth": 0.28,
+      "flatRecruit": 20,
+      "wariness": 0.1
+    },
+    "dailyCost": 70000
+  },
+  "referral": {
+    "name": "口コミ紹介制度",
+    "desc": "信者が信者を連れてくる仕組みを作る。地縁の濃い地方ほどよく効く。",
+    "layer": "followers",
+    "mode": "sustained",
+    "unlock": {
+      "followers": 3000
+    },
+    "effect": {
+      "growth": 0.42,
+      "churn": -0.05
+    },
+    "dailyCost": 260000,
+    "wordScaled": true
+  },
+  "prayerMeeting": {
+    "name": "合同祈祷会",
+    "desc": "教祖自ら壇上に立つ大祈祷。信仰度が跳ね上がる。",
+    "layer": "followers",
+    "mode": "oneshot",
+    "unlock": {
+      "followers": 20000
+    },
+    "effect": {
+      "growth": 0.5,
+      "faith": 1.6,
+      "churn": -0.1
+    },
+    "cost": 7000000,
+    "duration": 20,
+    "instant": {
+      "faith": 12
+    },
+    "requiresFounder": true
+  },
+  "circuit": {
+    "name": "巡回説法",
+    "desc": "教祖が各地を巡り歩く。強力だが、教祖を拘束し続ける。",
+    "layer": "followers",
+    "mode": "sustained",
+    "unlock": {
+      "followers": 80000
+    },
+    "effect": {
+      "growth": 0.7,
+      "faith": 1,
+      "churn": -0.08
+    },
+    "dailyCost": 900000,
+    "requiresFounder": true
+  },
+  "pilgrimage": {
+    "name": "聖地巡礼",
+    "desc": "本部を聖地と定め、全国から信者を集める大巡礼。",
+    "layer": "followers",
+    "mode": "oneshot",
+    "unlock": {
+      "followers": 400000
+    },
+    "effect": {
+      "growth": 1.1,
+      "faith": 1.2,
+      "wariness": 0.3
+    },
+    "cost": 150000000,
+    "duration": 30,
+    "instant": {
+      "faith": 15,
+      "wariness": 5
+    }
+  },
+  "newspaperAd": {
+    "name": "新聞広告",
+    "desc": "朝刊に全面広告を打つ。資金による布教の入り口。",
+    "layer": "funds",
+    "mode": "sustained",
+    "unlock": {
+      "spent": 0
+    },
+    "effect": {
+      "growth": 0.22,
+      "wariness": 0.03
+    },
+    "dailyCost": 420000,
+    "mediaScaled": true
+  },
+  "celebrity": {
+    "name": "著名人の取り込み",
+    "desc": "有名人を広告塔に据える。金額に見合う露出が得られる。",
+    "layer": "funds",
+    "mode": "sustained",
+    "unlock": {
+      "spent": 30000000
+    },
+    "effect": {
+      "growth": 0.48,
+      "donation": 0.05,
+      "wariness": 0.07
+    },
+    "dailyCost": 2400000,
+    "mediaScaled": true
+  },
+  "tvcm": {
+    "name": "テレビCM出稿",
+    "desc": "ゴールデン帯にCMを流し続ける。全国区の知名度を買う。",
+    "layer": "funds",
+    "mode": "sustained",
+    "unlock": {
+      "spent": 150000000
+    },
+    "effect": {
+      "growth": 0.95,
+      "wariness": 0.12
+    },
+    "dailyCost": 9500000,
+    "mediaScaled": true
+  },
+  "megaEvent": {
+    "name": "大規模イベント開催",
+    "desc": "ドームを借り切った祝祭。爆発的に人を集めるが、世間の注目も一身に浴びる。",
+    "layer": "funds",
+    "mode": "oneshot",
+    "unlock": {
+      "spent": 500000000
+    },
+    "effect": {
+      "growth": 1.7,
+      "donation": 0.2
+    },
+    "cost": 420000000,
+    "duration": 25,
+    "instant": {
+      "faith": 8,
+      "wariness": 9
+    }
+  },
+  "lobbying": {
+    "name": "政界工作",
+    "desc": "各方面へ静かに金を配る。行政の視線が目に見えて緩む。",
+    "layer": "funds",
+    "mode": "sustained",
+    "unlock": {
+      "spent": 2500000000
+    },
+    "effect": {
+      "wariness": -0.3,
+      "votePower": 0.3
+    },
+    "dailyCost": 35000000
+  }
+}

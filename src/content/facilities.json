@@ -1,0 +1,178 @@
+{
+  "hq": {
+    "name": "教会本部",
+    "icon": "⛩",
+    "desc": "教団の中枢。常時稼働し、ロックを必要としない。",
+    "cost": 0,
+    "upkeep": 12000,
+    "priests": 0,
+    "alwaysActive": true,
+    "unique": true,
+    "effect": {
+      "growth": 0.1,
+      "faith": 0.6,
+      "donation": 0.05
+    },
+    "look": {
+      "height": 56,
+      "color": "#c8452f",
+      "roof": "tower"
+    },
+    "tip": "教団の中枢。ロック不要で常時稼働する。中央に据えると全施設の効果が4%増し、周囲8区画は15%増しになるので、どこに置くかは重要な判断。"
+  },
+  "missionPost": {
+    "name": "布教所",
+    "icon": "🕯",
+    "desc": "街区に根を張る布教の拠点。信者獲得を伸ばす。",
+    "cost": 4500000,
+    "upkeep": 34000,
+    "priests": 2,
+    "effect": {
+      "growth": 0.22,
+      "wariness": 0.04
+    },
+    "look": {
+      "height": 28,
+      "color": "#a8743f",
+      "roof": "gable"
+    },
+    "tip": "信者獲得の基本となる施設。都市の外周に置くと往来に面して布教が伸びる。布教所どうしを隣接させると受け持ち区画が繋がる。"
+  },
+  "hall": {
+    "name": "集会所",
+    "icon": "🏛",
+    "desc": "定例の集いを開く場。お布施と信仰の定着を後押しする。",
+    "cost": 3200000,
+    "upkeep": 24000,
+    "priests": 2,
+    "effect": {
+      "donation": 0.16,
+      "faith": 0.5,
+      "churn": -0.05
+    },
+    "look": {
+      "height": 38,
+      "color": "#7c8aa6",
+      "roof": "dome"
+    },
+    "tip": "お布施と信仰の定着を支える。修練道場や放送局と隣接させると効きが増す。"
+  },
+  "dojo": {
+    "name": "修練道場",
+    "icon": "🧘",
+    "desc": "信者を鍛える施設。信仰度を大きく高め、離脱を抑える。",
+    "cost": 8000000,
+    "upkeep": 70000,
+    "priests": 3,
+    "effect": {
+      "faith": 1.4,
+      "churn": -0.16,
+      "wariness": 0.03
+    },
+    "look": {
+      "height": 32,
+      "color": "#6f9a78",
+      "roof": "gable"
+    },
+    "tip": "信仰度を大きく高め、離脱を抑える。急拡大で信仰が薄まったときの立て直し役。"
+  },
+  "press": {
+    "name": "出版局",
+    "icon": "📰",
+    "desc": "新聞・書籍を刷る。教団の初期収益の柱であり、布教の起点でもある。",
+    "cost": 10000000,
+    "upkeep": 95000,
+    "priests": 3,
+    "requires": "publishing",
+    "effect": {
+      "growth": 0.18,
+      "income": 210000,
+      "donation": 0.04
+    },
+    "look": {
+      "height": 42,
+      "color": "#b08a4a",
+      "roof": "flat"
+    },
+    "tip": "教団最初の安定収入。放送局と隣り合わせると発信が噛み合い、神学校の隣なら教本が教材になる。"
+  },
+  "school": {
+    "name": "神学校",
+    "icon": "🎓",
+    "desc": "信者を聖職者へ転向させる。授業料・認証料も教団の収入になる。",
+    "cost": 32000000,
+    "upkeep": 260000,
+    "priests": 4,
+    "requires": "education",
+    "effect": {
+      "convertCap": 14,
+      "incomePerPriest": 2600,
+      "faith": 0.4
+    },
+    "look": {
+      "height": 46,
+      "color": "#8a7cb0",
+      "roof": "gable"
+    },
+    "tip": "信者を聖職者へ転向させる唯一の施設。最初の1棟は教祖を入れて動かすことになる。"
+  },
+  "broadcast": {
+    "name": "放送局",
+    "icon": "📡",
+    "desc": "電波による大規模布教。獲得は強力だが、目立つぶん警戒される。",
+    "cost": 48000000,
+    "upkeep": 430000,
+    "priests": 5,
+    "requires": "publishing",
+    "effect": {
+      "growth": 0.45,
+      "income": 520000,
+      "wariness": 0.09
+    },
+    "look": {
+      "height": 56,
+      "color": "#58a0c0",
+      "roof": "antenna"
+    },
+    "tip": "獲得力は最大級だが目立つぶん警戒される。財団を建ててから動かすのが安全。"
+  },
+  "foundationOffice": {
+    "name": "財団事務局",
+    "icon": "🤝",
+    "desc": "慈善と社会貢献の窓口。教団に一つだけ置ける。世間の警戒度を常時大きく引き下げる。",
+    "cost": 85000000,
+    "upkeep": 620000,
+    "priests": 6,
+    "unique": true,
+    "requires": "foundation",
+    "effect": {
+      "wariness": -0.7,
+      "churn": -0.06
+    },
+    "look": {
+      "height": 40,
+      "color": "#5aa88a",
+      "roof": "flat"
+    },
+    "tip": "教団に一つだけ置ける。稼働している間ずっと警戒度を引き下げる。外周や集会所の隣だとさらに効く。"
+  },
+  "partyHQ": {
+    "name": "党本部",
+    "icon": "🏢",
+    "desc": "政治活動の司令塔。組織票のとりまとめ効率を大きく高める。",
+    "cost": 130000000,
+    "upkeep": 1100000,
+    "priests": 8,
+    "requires": "party",
+    "effect": {
+      "votePower": 0.35,
+      "wariness": 0.08
+    },
+    "look": {
+      "height": 62,
+      "color": "#b05a7c",
+      "roof": "flat"
+    },
+    "tip": "組織票のとりまとめ効率を上げる。財団事務局と隣接させると票と評判が同時に動く。"
+  }
+}

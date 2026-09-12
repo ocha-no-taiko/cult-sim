@@ -1,0 +1,77 @@
+{
+  "youth": {
+    "name": "学生・若年層",
+    "short": "若年",
+    "note": "終末思想に強く反応する。階層の厳格さを嫌う。お布施は少ないが聖職者適性が高い。",
+    "color": "#5eb8ff",
+    "donation": 55,
+    "baseChurn": 0.022,
+    "priestAptitude": 1.35,
+    "affinity": {
+      "asceticism": -0.45,
+      "apocalypse": 0.95,
+      "worldly": 0.2,
+      "hierarchy": -0.6
+    }
+  },
+  "worker": {
+    "name": "勤労・会社員層",
+    "short": "勤労",
+    "note": "現世利益を強く求める。終末思想や過度な禁欲には冷淡。母数が最も大きい。",
+    "color": "#9ad14b",
+    "donation": 175,
+    "baseChurn": 0.018,
+    "priestAptitude": 0.95,
+    "affinity": {
+      "asceticism": -0.3,
+      "apocalypse": -0.3,
+      "worldly": 0.9,
+      "hierarchy": 0.25
+    }
+  },
+  "wealthy": {
+    "name": "経営・富裕層",
+    "short": "富裕",
+    "note": "お布施額が桁違い。現世利益と明確な階層を好むが、離脱も早い。",
+    "color": "#f2c14e",
+    "donation": 900,
+    "baseChurn": 0.03,
+    "priestAptitude": 0.55,
+    "affinity": {
+      "asceticism": -0.55,
+      "apocalypse": -0.25,
+      "worldly": 1,
+      "hierarchy": 0.75
+    }
+  },
+  "community": {
+    "name": "地域・主婦層",
+    "short": "地域",
+    "note": "口コミの結節点。離脱しにくく、布教の伝播を担う安定層。",
+    "color": "#ff9db0",
+    "donation": 110,
+    "baseChurn": 0.014,
+    "priestAptitude": 1.05,
+    "affinity": {
+      "asceticism": 0.35,
+      "apocalypse": -0.15,
+      "worldly": 0.4,
+      "hierarchy": 0.2
+    }
+  },
+  "elder": {
+    "name": "高齢層",
+    "short": "高齢",
+    "note": "禁欲と階層秩序を尊ぶ。一度信じればほとんど離れない。蓄えからのお布施も厚い。",
+    "color": "#c79ce0",
+    "donation": 245,
+    "baseChurn": 0.01,
+    "priestAptitude": 0.4,
+    "affinity": {
+      "asceticism": 0.75,
+      "apocalypse": 0.3,
+      "worldly": -0.2,
+      "hierarchy": 0.85
+    }
+  }
+}

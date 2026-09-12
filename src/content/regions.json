@@ -1,0 +1,184 @@
+{
+  "hokkaido": {
+    "name": "北海道",
+    "blurb": "人口は少ないが土地が広く、世間の目が届きにくい。警戒度が上がりにくい。",
+    "population": 5100000,
+    "demographics": {
+      "youth": 0.16,
+      "worker": 0.3,
+      "wealthy": 0.06,
+      "community": 0.22,
+      "elder": 0.26
+    },
+    "mods": {
+      "wariness": 0.7,
+      "faith": 1.05,
+      "word": 1.05,
+      "media": 0.85,
+      "growth": 0.95
+    },
+    "bias": {
+      "asceticism": 0.15,
+      "apocalypse": 0.05,
+      "worldly": 0,
+      "hierarchy": 0
+    },
+    "branchCost": 55000000
+  },
+  "tohoku": {
+    "name": "東北",
+    "blurb": "高齢層が中心。一度根づいた信仰は離れにくく、定着率が高い。",
+    "population": 8300000,
+    "demographics": {
+      "youth": 0.13,
+      "worker": 0.28,
+      "wealthy": 0.05,
+      "community": 0.22,
+      "elder": 0.32
+    },
+    "mods": {
+      "wariness": 0.85,
+      "faith": 1.3,
+      "word": 1.1,
+      "media": 0.85,
+      "growth": 0.9
+    },
+    "bias": {
+      "asceticism": 0.2,
+      "apocalypse": 0.1,
+      "worldly": -0.05,
+      "hierarchy": 0.2
+    },
+    "branchCost": 78000000
+  },
+  "kanto": {
+    "name": "関東",
+    "blurb": "人口最大。若年層比率も高く、同じシェア率でも絶対数を稼ぎやすい。ただし世間の目は厳しい。",
+    "population": 43000000,
+    "demographics": {
+      "youth": 0.24,
+      "worker": 0.36,
+      "wealthy": 0.11,
+      "community": 0.17,
+      "elder": 0.12
+    },
+    "mods": {
+      "wariness": 1.3,
+      "faith": 0.85,
+      "word": 0.9,
+      "media": 1.15,
+      "growth": 1.1
+    },
+    "bias": {
+      "asceticism": -0.1,
+      "apocalypse": 0.2,
+      "worldly": 0.1,
+      "hierarchy": -0.15
+    },
+    "branchCost": 380000000
+  },
+  "chubu": {
+    "name": "中部",
+    "blurb": "製造業を軸にした勤労・経営層が厚い。現世利益を説く教義がよく刺さる。",
+    "population": 21500000,
+    "demographics": {
+      "youth": 0.18,
+      "worker": 0.4,
+      "wealthy": 0.12,
+      "community": 0.17,
+      "elder": 0.13
+    },
+    "mods": {
+      "wariness": 1,
+      "faith": 1,
+      "word": 1,
+      "media": 1,
+      "growth": 1
+    },
+    "bias": {
+      "asceticism": -0.15,
+      "apocalypse": -0.1,
+      "worldly": 0.35,
+      "hierarchy": 0.1
+    },
+    "branchCost": 200000000
+  },
+  "kinki": {
+    "name": "近畿",
+    "blurb": "商都。出版・広報といった商業的な布教との相性が飛び抜けて良い。",
+    "population": 22000000,
+    "demographics": {
+      "youth": 0.2,
+      "worker": 0.36,
+      "wealthy": 0.1,
+      "community": 0.19,
+      "elder": 0.15
+    },
+    "mods": {
+      "wariness": 1.1,
+      "faith": 0.95,
+      "word": 1.15,
+      "media": 1.4,
+      "growth": 1.05
+    },
+    "bias": {
+      "asceticism": -0.1,
+      "apocalypse": 0,
+      "worldly": 0.25,
+      "hierarchy": -0.05
+    },
+    "branchCost": 210000000
+  },
+  "chugoku_shikoku": {
+    "name": "中国・四国",
+    "blurb": "地縁ネットワークが濃い。口コミによる紹介布教が非常に効きやすい。",
+    "population": 10900000,
+    "demographics": {
+      "youth": 0.15,
+      "worker": 0.31,
+      "wealthy": 0.06,
+      "community": 0.24,
+      "elder": 0.24
+    },
+    "mods": {
+      "wariness": 0.9,
+      "faith": 1.1,
+      "word": 1.45,
+      "media": 0.9,
+      "growth": 0.95
+    },
+    "bias": {
+      "asceticism": 0.1,
+      "apocalypse": 0,
+      "worldly": 0.05,
+      "hierarchy": 0.15
+    },
+    "branchCost": 96000000
+  },
+  "kyushu": {
+    "name": "九州",
+    "blurb": "土着信仰の土壌が残り、新しい教えも受け入れられやすい。定着スピードが速い。",
+    "population": 14200000,
+    "demographics": {
+      "youth": 0.19,
+      "worker": 0.33,
+      "wealthy": 0.07,
+      "community": 0.22,
+      "elder": 0.19
+    },
+    "mods": {
+      "wariness": 0.9,
+      "faith": 1.2,
+      "word": 1.2,
+      "media": 0.95,
+      "growth": 1.2
+    },
+    "bias": {
+      "asceticism": 0.1,
+      "apocalypse": 0.2,
+      "worldly": 0,
+      "hierarchy": 0.15
+    },
+    "branchCost": 138000000
+  }
+}
