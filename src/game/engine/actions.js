@@ -335,9 +335,13 @@ export function reducer(state, action) {
       const t = totals(state)
       if (t.followers < BRANCH_MIN_FOLLOWERS) return state
       if (state.funds < reg.branchCost) return state
+      // 支部には人を置いてこなければならない。遊休の聖職者からそのまま派遣する
+      const need = reg.branchPriests ?? 0
+      if (priestsFree(state) < need) return state
 
       const s = clone(state)
       spend(s, reg.branchCost)
+      s.priests = Math.max(0, s.priests - need)
       const rs = s.regions[rid]
       rs.unlocked = true
       rs.openedDay = s.day
@@ -350,7 +354,11 @@ export function reducer(state, action) {
         assigned += n
       })
       s.wariness = Math.min(100, s.wariness + 2)
-      log(s, 'good', `${reg.name}に支部を開設した。この地方の信者率も得票率に乗る。`)
+      log(
+        s,
+        'good',
+        `${reg.name}に支部を開設し、聖職者${need}人を送り出した。この地方の信者率も得票率に乗る。`,
+      )
       return s
     }
 

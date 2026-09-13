@@ -9,7 +9,7 @@
 | `businesses.json` | 事業（出版/教育/財団/政党）。名前・説明・費用・解禁条件 |
 | `missions.json` | 布教施策。名前・説明・レイヤー・費用・効果 |
 | `synergies.json` | 配置シナジー。隣接ペアと区画ゾーンの定義 |
-| `regions.json` | 7地方。名前・紹介文・人口・人口構成・地方補正・教義バイアス・支部費用 |
+| `regions.json` | 7地方。名前・紹介文・人口・人口構成・地方補正・教義バイアス・支部費用（`branchCost`）・支部に派遣する聖職者数（`branchPriests`） |
 | `clusters.json` | 信者クラスタ。名前・性格文・色・お布施額・離脱率・教義への感応度 |
 | `doctrine.json` | 教義4軸の名前と両端のラベル、説明 |
 | `events.json` | ランダムイベントの名前・本文・抽選重み（発生条件と効果は `src/game/data/events.js`） |

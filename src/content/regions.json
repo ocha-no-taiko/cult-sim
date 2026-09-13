@@ -23,7 +23,8 @@
       "worldly": 0,
       "hierarchy": 0
     },
-    "branchCost": 55000000
+    "branchCost": 55000000,
+    "branchPriests": 3
   },
   "tohoku": {
     "name": "東北",
@@ -49,7 +50,8 @@
       "worldly": -0.05,
       "hierarchy": 0.2
     },
-    "branchCost": 78000000
+    "branchCost": 78000000,
+    "branchPriests": 4
   },
   "kanto": {
     "name": "関東",
@@ -75,7 +77,8 @@
       "worldly": 0.1,
       "hierarchy": -0.15
     },
-    "branchCost": 380000000
+    "branchCost": 380000000,
+    "branchPriests": 22
   },
   "chubu": {
     "name": "中部",
@@ -101,7 +104,8 @@
       "worldly": 0.35,
       "hierarchy": 0.1
     },
-    "branchCost": 200000000
+    "branchCost": 200000000,
+    "branchPriests": 11
   },
   "kinki": {
     "name": "近畿",
@@ -127,7 +131,8 @@
       "worldly": 0.25,
       "hierarchy": -0.05
     },
-    "branchCost": 210000000
+    "branchCost": 210000000,
+    "branchPriests": 11
   },
   "chugoku_shikoku": {
     "name": "中国・四国",
@@ -153,7 +158,8 @@
       "worldly": 0.05,
       "hierarchy": 0.15
     },
-    "branchCost": 96000000
+    "branchCost": 96000000,
+    "branchPriests": 5
   },
   "kyushu": {
     "name": "九州",
@@ -179,6 +185,7 @@
       "worldly": 0,
       "hierarchy": 0.15
     },
-    "branchCost": 138000000
+    "branchCost": 138000000,
+    "branchPriests": 7
   }
 }

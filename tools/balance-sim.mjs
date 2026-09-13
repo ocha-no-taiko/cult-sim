@@ -149,9 +149,12 @@ for (let i = 0; i < MAX_DAYS && s.phase === 'playing'; i++) {
     break
   }
 
-  // 聖職者転向：施設を回すのに必要な数だけ
+  // 聖職者転向：施設を回すのに必要な数＋次に開く支部へ送る人数
+  const nextBranch = REGIONS.filter((r) => !s.regions[r.id].unlocked)
+    .sort((a, b) => a.branchCost - b.branchCost)[0]
+  const branchNeed = t.followers >= 25_000 ? (nextBranch?.branchPriests ?? 0) : 0
   const need = s.facilities.filter((f) => f.staff === 'none' && !FACILITY_MAP[f.type].alwaysActive)
-    .reduce((a, f) => a + FACILITY_MAP[f.type].priests, 0)
+    .reduce((a, f) => a + FACILITY_MAP[f.type].priests, 0) + branchNeed
   const cap = convertCapacity(s) - s.convertedToday
   if (need > priestsFree(s) && cap > 0 && s.funds > priestCost(s) * cap + reserve) {
     act('CONVERT_PRIESTS', Math.min(cap, need - priestsFree(s)))
@@ -222,7 +225,8 @@ for (let i = 0; i < MAX_DAYS && s.phase === 'playing'; i++) {
 
   // 支部展開：安い地方から
   const closed = REGIONS.filter((r) => !s.regions[r.id].unlocked).sort((a, b) => a.branchCost - b.branchCost)
-  if (closed[0] && t.followers >= 25_000 && s.funds > closed[0].branchCost + reserve) {
+  if (closed[0] && t.followers >= 25_000 && s.funds > closed[0].branchCost + reserve
+      && priestsFree(s) >= (closed[0].branchPriests ?? 0)) {
     act('OPEN_BRANCH', closed[0].id)
     mark('branch:' + closed[0].id)
   }

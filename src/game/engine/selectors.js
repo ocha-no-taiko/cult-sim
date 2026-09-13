@@ -51,7 +51,9 @@ export function priestsAssigned(state) {
 }
 
 export function priestsFree(state) {
-  return state.priests - priestsAssigned(state)
+  // 幹部離反の直後など、配置が定員を超えている瞬間は0として扱う
+  // （翌日の処理で配置そのものが整理される）
+  return Math.max(0, state.priests - priestsAssigned(state))
 }
 
 /** 現在有効な布教施策（継続ONのもの＋効果持続中の単発） */
