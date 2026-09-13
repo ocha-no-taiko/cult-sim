@@ -693,3 +693,41 @@ input[type=text]::placeholder { color: var(--ink-faint); font-family: var(--goth
   overflow: auto;
   margin: 0;
 }
+
+/* ── 投資カードの操作ボタン ───────────────── */
+.invest-actions { display: flex; flex-direction: column; gap: 6px; }
+.invest-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+  padding: 7px 10px;
+}
+.invest-btn .invest-amt {
+  font-size: 11.5px;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 投資カードは項目が多いので、少し広めに取って行ごとに並べる */
+.cards.invest-cards { grid-template-columns: repeat(auto-fill, minmax(304px, 1fr)); }
+.invest-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.invest-stats > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.invest-stats dt { color: var(--ink-faint); white-space: nowrap; margin: 0; }
+.invest-stats dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
