@@ -2,10 +2,12 @@
 // シナジーの定義は src/content/synergies.json（隣接ペアと区画ゾーン）。
 import SYNERGIES from '../../content/synergies.json' with { type: 'json' }
 import { FACILITY_MAP } from '../data/facilities.js'
+import { REGION_MAP } from '../data/regions.js'
 import { GRID_W, GRID_H } from './constants.js'
 
 export const ADJACENCY_RULES = SYNERGIES.adjacency
 export const ZONE_RULES = SYNERGIES.zones
+export const REGIONAL = SYNERGIES.regional ?? {}
 
 const EFFECT_KEYS = [
   'growth', 'donation', 'faith', 'churn', 'wariness', 'underworld',
@@ -32,6 +34,44 @@ export const isAdjacent = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) ==
 /** 斜めを含む8方向で接しているか（本部の威光） */
 export const isAround = (a, b) =>
   Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) === 1
+
+/**
+ * 宗教都市が立っている地方の性格を、施設とシナジーに乗せる。
+ * 都市は拠点に一つなので、拠点地方の係数を使う。
+ */
+export function regionalModifiers(state) {
+  const region = REGION_MAP[state.homeRegion]
+  if (!region) return { region: null, ruleMult: () => 1, facilityMult: () => 1, notes: [] }
+
+  const word = region.mods?.word ?? 1
+  const media = region.mods?.media ?? 1
+  const wordRules = new Set(REGIONAL.wordScaled?.rules ?? [])
+  const mediaRules = new Set([...(REGIONAL.mediaScaled?.rules ?? []), ...(REGIONAL.mediaScaled?.zones ?? [])])
+
+  // 土地柄の教義補正 → その軸に紐づく施設の効果を底上げする
+  const scale = REGIONAL.doctrineBoost?.scale ?? 0
+  const axes = REGIONAL.doctrineBoost?.axes ?? {}
+  const facilityBoost = {}
+  for (const [axis, types] of Object.entries(axes)) {
+    const bias = region.bias?.[axis] ?? 0
+    if (!bias) continue
+    for (const t of types) facilityBoost[t] = (facilityBoost[t] ?? 1) * (1 + bias * scale)
+  }
+
+  const notes = []
+  if (word !== 1) notes.push({ kind: 'word', label: '口コミ', mult: word })
+  if (media !== 1) notes.push({ kind: 'media', label: '広報', mult: media })
+  for (const [t, m] of Object.entries(facilityBoost)) {
+    notes.push({ kind: 'doctrine', label: FACILITY_MAP[t]?.name ?? t, mult: m })
+  }
+
+  return {
+    region,
+    ruleMult: (id) => (wordRules.has(id) ? word : mediaRules.has(id) ? media : 1),
+    facilityMult: (type) => facilityBoost[type] ?? 1,
+    notes,
+  }
+}
 
 function isActive(state, f) {
   const def = FACILITY_MAP[f.type]
@@ -62,19 +102,22 @@ export function computeCity(state) {
     }
   }
 
+  const regional = regionalModifiers(state)
   const effects = emptyEffects()
   const zoneHits = []
 
   for (const f of actives) {
     const def = FACILITY_MAP[f.type]
-    const mult = globalMult * (halo.has(f.uid) && haloRule ? haloRule.mult : 1)
+    const mult = globalMult
+      * (halo.has(f.uid) && haloRule ? haloRule.mult : 1)
+      * regional.facilityMult(f.type)
     addEffects(effects, def.effect, mult)
     if (halo.has(f.uid)) zoneHits.push({ rule: haloRule, uid: f.uid })
 
     for (const z of edgeRules) {
       if (!z.types.includes(f.type)) continue
       if (!isEdgeTile(f.x, f.y)) continue
-      addEffects(effects, z.effect, globalMult)
+      addEffects(effects, z.effect, globalMult * regional.ruleMult(z.id))
       zoneHits.push({ rule: z, uid: f.uid })
     }
   }
@@ -90,13 +133,13 @@ export function computeCity(state) {
         const [p, q] = rule.pair
         const match = (a.type === p && b.type === q) || (a.type === q && b.type === p)
         if (!match) continue
-        addEffects(effects, rule.effect, globalMult)
+        addEffects(effects, rule.effect, globalMult * regional.ruleMult(rule.id))
         links.push({ rule, a: a.uid, b: b.uid })
       }
     }
   }
 
-  return { effects, links, zoneHits, halo, centered, hq }
+  return { effects, links, zoneHits, halo, centered, hq, regional }
 }
 
 /** 表示用に、成立しているシナジーを種類ごとにまとめる */

@@ -12,6 +12,7 @@ import { FACILITY_MAP, FACILITY_TYPES, BUSINESSES } from '../src/game/data/facil
 import { MISSIONS } from '../src/game/data/missions.js'
 import { REGIONS } from '../src/game/data/regions.js'
 import { GRID_W, GRID_H } from '../src/game/engine/constants.js'
+import { portfolioValue, VEHICLE_MAP } from '../src/game/engine/invest.js'
 
 const difficulty = process.argv[2] ?? 'normal'
 const home = process.argv[3] ?? 'kanto'
@@ -25,6 +26,7 @@ act('BEGIN_PREACHING')
 
 // ROUTE=light|shadow|economy|mass で建て方と狙う決着を変える
 const ROUTE = process.env.ROUTE ?? 'light'
+const INVEST = process.env.INVEST ?? null
 const PLANS = {
   light: {
     order: ['missionPost', 'hall', 'press', 'dojo', 'school', 'hospital', 'foundationOffice',
@@ -191,6 +193,33 @@ for (let i = 0; i < MAX_DAYS && s.phase === 'playing'; i++) {
     if (idle) act('SET_STAFF', { uid: idle.uid, mode: 'founder' })
   }
 
+  // 余剰資金の運用（INVEST で運用先を指定したときだけ。mix は容量の小さい順に埋める）
+  if (INVEST) {
+    const spare = s.funds - reserve * 3
+    if (spare > 0 && fin.net > 0) {
+      if (INVEST === 'mix') {
+        // 利回りの高い（＝容量の小さい）ものから容量まで埋め、余りは国債へ
+        const order = ['underground', 'equity', 'bonds']
+        let left = Math.floor(spare * 0.5)
+        for (const id of order) {
+          if (left <= 0) break
+          const v = VEHICLE_MAP[id]
+          const room = Math.max(0, (v.capacity ?? Infinity) - (s.investments?.[id] ?? 0))
+          const put = Math.min(left, room)
+          if (put > 0) { act('INVEST', { vehicle: id, amount: put }); left -= put }
+        }
+      } else {
+        act('INVEST', { vehicle: INVEST, amount: Math.floor(spare * 0.5) })
+      }
+    }
+    if (s.funds < reserve) {
+      for (const id of ['bonds', 'equity', 'underground']) {
+        const held = s.investments?.[id] ?? 0
+        if (held > 0) { act('DIVEST', { vehicle: id, amount: Math.floor(held * 0.3) }); break }
+      }
+    }
+  }
+
   // 支部展開：安い地方から
   const closed = REGIONS.filter((r) => !s.regions[r.id].unlocked).sort((a, b) => a.branchCost - b.branchCost)
   if (closed[0] && t.followers >= 25_000 && s.funds > closed[0].branchCost + reserve) {
@@ -223,6 +252,7 @@ console.log(`\n=== ${difficulty} / ${home} ===`)
 console.log(`終了: day ${s.day} / phase ${s.phase}` + (s.ending ? ` / ${s.ending.title}` : ''))
 console.log(`信者 ${y(t.followers)}  聖職者 ${s.priests}  平均信仰度 ${t.faithAvg ?? t.avgFaith.toFixed(1)}`)
 console.log(`資金 ${y(s.funds)}円  日次収支 ${y(fin.net)}円  警戒度 ${s.wariness.toFixed(1)}  闇度 ${(s.underworld ?? 0).toFixed(1)}`)
+console.log(`運用中 ${y(portfolioValue(s.investments))}円  総資産 ${y(s.funds + portfolioValue(s.investments))}円`)
 console.log(`全人口比 ${(t.nationalShare * 100).toFixed(2)}%  事業 ${BUSINESSES.filter((b) => s.businesses[b.id]).length}/${BUSINESSES.length}  達成 ${Object.entries(s.achieved ?? {}).map(([k,v])=>`${k}=d${v}`).join(' ') || 'なし'}`)
 console.log(`得票率見込 ${(vp.share * 100).toFixed(1)}%  対抗第一党 ${(vp.rival * 100).toFixed(1)}%`)
 console.log(`施設 ${s.facilities.length}  展開地方 ${REGIONS.filter((r) => s.regions[r.id].unlocked).length}/7`)

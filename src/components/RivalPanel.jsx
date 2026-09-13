@@ -7,14 +7,22 @@ import ENDINGS from '../content/endings.json' with { type: 'json' }
  * 闇度だけは誰にも見えない。表の事業の設立は通知されるので、
  * 「表を厚くしている教団は、清廉なのか、闇を薄めているのか」を読むことになる。
  */
-export default function RivalPanel({ state, match, onAssassinate }) {
+const CHARGE_PRESETS = ['名誉毀損', '著作権侵害', '不当な勧誘', '寄付金の不正利用', '施設の違法建築', '虚偽広告']
+
+export default function RivalPanel({ state, match, onAssassinate, onLawsuit }) {
   const [target, setTarget] = useState(null)
+  const [charge, setCharge] = useState(CHARGE_PRESETS[0])
   const room = match.room
   const meId = match.me?.id
   const players = (room.players ?? []).filter((p) => p.id !== meId)
   const self = (room.players ?? []).find((p) => p.id === meId)
   const cost = room.limits?.assassinCost ?? 400_000_000
   const minUw = room.limits?.assassinMinUnderworld ?? 30
+  const coolAssassin = room.limits?.assassinCooldown ?? 7
+  const suitCost = room.limits?.lawsuitCost ?? 100_000_000
+  const coolSuit = room.limits?.lawsuitCooldown ?? 3
+  const counterGap = room.limits?.lawsuitCounterGap ?? 25
+  const chances = match.chances?.lawsuit ?? {}
 
   const canPay = state.funds >= cost
   const alive = self?.alive !== false && state.phase === 'playing'
@@ -66,7 +74,7 @@ export default function RivalPanel({ state, match, onAssassinate }) {
           <div className="panel-head" style={{ fontSize: 14 }}>暗殺を差し向ける</div>
           <div className="panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             <div className="faint" style={{ fontSize: 11.5, lineHeight: 1.85 }}>
-              1日に一度だけ、他教団の教祖を狙える。費用は{yen(cost)}。
+              {coolAssassin}日に一度だけ、他教団の教祖を狙える。費用は{yen(cost)}。
               <b>闇の濃い側が勝つ</b>。実行には自分の闇度が{minUw}以上必要で、
               相手の闇度が自分を大きく上回っていれば逆襲されてこちらが終わる。
               相手の闇度は見えない。
@@ -87,6 +95,51 @@ export default function RivalPanel({ state, match, onAssassinate }) {
               {!canPay ? '資金が足りない'
                 : state.underworld < minUw ? '裏社会のつてが無い'
                   : target ? `${players.find((p) => p.id === target)?.name}へ差し向ける` : '相手を選ぶ'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {alive && (
+        <div className="panel">
+          <div className="panel-head" style={{ fontSize: 14 }}>訴訟を起こす</div>
+          <div className="panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+            <div className="faint" style={{ fontSize: 11.5, lineHeight: 1.85 }}>
+              {coolSuit}日に一度、着手金{yen(suitCost)}で起こせる。
+              <b>相手の警戒度が自分より高いほど通る</b>。自分の闇度が高いと通りにくい。
+              成功すれば相手の運転資金の15〜25%を取れる。
+              相手が自分より{counterGap}以上クリーンだと反訴され、こちらの警戒度が跳ね上がる。
+            </div>
+            <div className="kv">
+              <span className="k">あなたの警戒度</span><span className="v">{state.wariness.toFixed(1)}</span>
+              <span className="k">狙う相手</span>
+              <span className="v">
+                {target ? players.find((p) => p.id === target)?.name : '未選択'}
+                {target && chances[target] != null && (
+                  <span className="gold" style={{ marginLeft: 6 }}>
+                    成立率 {(chances[target] * 100).toFixed(0)}%
+                  </span>
+                )}
+              </span>
+            </div>
+            <div>
+              <div className="faint" style={{ fontSize: 11.5, marginBottom: 4 }}>罪状（結果には影響しない）</div>
+              <div className="name-row">
+                <input type="text" value={charge} maxLength={20} onChange={(e) => setCharge(e.target.value)} />
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
+                {CHARGE_PRESETS.map((c) => (
+                  <button key={c} className="btn sm ghost" onClick={() => setCharge(c)}>{c}</button>
+                ))}
+              </div>
+            </div>
+            <button
+              className="btn primary"
+              disabled={!target || state.funds < suitCost || !charge.trim()}
+              onClick={() => { onLawsuit(target, charge.trim()); setTarget(null) }}
+            >
+              {state.funds < suitCost ? '着手金が足りない'
+                : target ? `${players.find((p) => p.id === target)?.name}を「${charge}」で訴える` : '相手を選ぶ'}
             </button>
           </div>
         </div>

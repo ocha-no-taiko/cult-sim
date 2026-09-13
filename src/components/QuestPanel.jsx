@@ -5,6 +5,7 @@ import { REGIONS } from '../game/data/regions.js'
 import { BUSINESSES } from '../game/data/facilities.js'
 import { isFacilityActive, totals } from '../game/engine/selectors.js'
 import { yen, people, pct } from '../game/format.js'
+import { portfolioValue } from '../game/engine/invest.js'
 
 const has = (s, type) => s.facilities.some((f) => f.type === type)
 const running = (s, type) => s.facilities.some((f) => f.type === type && isFacilityActive(s, f))
@@ -33,11 +34,12 @@ function endingProgress(state, t) {
   const rows = []
   const cg = ENDINGS.conglomerate
   const founded = BUSINESSES.filter((b) => state.businesses[b.id]).length
+  const wealth = state.funds + portfolioValue(state.investments)
   rows.push({
     id: 'conglomerate',
     label: ENDINGS.conglomerate.title,
-    value: `事業 ${founded}/${BUSINESSES.length}・資金 ${yen(state.funds)} / ${yen(cg.requireFunds)}`,
-    ratio: Math.min(1, (founded / BUSINESSES.length) * 0.5 + Math.min(1, state.funds / cg.requireFunds) * 0.5),
+    value: `事業 ${founded}/${BUSINESSES.length}・総資産 ${yen(wealth)} / ${yen(cg.requireFunds)}`,
+    ratio: Math.min(1, (founded / BUSINESSES.length) * 0.5 + Math.min(1, wealth / cg.requireFunds) * 0.5),
   })
   rows.push({
     id: 'congregation',

@@ -35,6 +35,8 @@ export function useMatch() {
   const [error, setError] = useState(null)
   const [room, setRoom] = useState(EMPTY_ROOM)
   const [me, setMe] = useState(null)
+  const [chances, setChances] = useState({})
+  const [ranking, setRanking] = useState(null)
   const handlers = useRef({})
 
   const on = useCallback((map) => { handlers.current = { ...handlers.current, ...map } }, [])
@@ -55,6 +57,8 @@ export function useMatch() {
         let m
         try { m = JSON.parse(ev.data) } catch { return }
         if (m.t === 'room') setRoom(m)
+        else if (m.t === 'chances') setChances(m)
+        else if (m.t === 'over' && m.ranking) setRanking(m.ranking)
         else if (m.t === 'joined') { setMe({ id: m.playerId, name: m.name }); setStatus('joined') }
         else if (m.t === 'error') { setError(m.msg); setStatus('error') }
         handlers.current[m.t]?.(m)
@@ -77,7 +81,7 @@ export function useMatch() {
 
   useEffect(() => () => wsRef.current?.close(), [])
 
-  return { status, error, room, me, join, leave, send, on }
+  return { status, error, room, me, chances, ranking, join, leave, send, on }
 }
 
 /** 共通の時計から、いま何日目かを出す */

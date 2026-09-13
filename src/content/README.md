@@ -15,6 +15,7 @@
 | `events.json` | ランダムイベントの名前・本文・抽選重み（発生条件と効果は `src/game/data/events.js`） |
 | `endings.json` | 決着の条件と文言（勝利4種・敗北3種）。到達に必要な金額や割合もここ |
 | `quests.json` | 「導きの書」の手順の文言（達成判定は `src/components/QuestPanel.jsx`） |
+| `investments.json` | 投資の運用先。利回り・変動幅・元本割れ確率・受け入れ容量・副作用 |
 | `tips.json` | 各画面の手引きカード |
 
 ## 施設（facilities.json）
@@ -90,6 +91,40 @@
 
 `requireShare`（全人口比）、`requireUnderworld`・`requireFollowers`・`requireBusiness`（裏ルート）も同様に調整できる。
 敗北側（`bankrupt` / `raid` / `assassinated`）は文言のみ。
+
+## 投資（investments.json）
+
+```jsonc
+"equity": {
+  "name": "国内株式ファンド",
+  "dailyReturn": 0.0030,     // 1日の基準利回り
+  "volatility": 0.0090,      // 日々の振れ幅
+  "crashChance": 0.0060,     // 元本割れの発生確率（1日あたり）
+  "crashLoss": 0.22,         // 起きたときに失う割合
+  "capacity": 2000000000000, // これを超えて預けた分は働かず、ただ寝ている
+  "wariness": 0.03,          // 総資産に占める割合に比例して乗る
+  "underworld": 0,
+  "shadow": false            // true にすると「裏の運用」の枠に並ぶ
+}
+```
+
+期待値は `dailyReturn − crashChance × crashLoss`。これが負にならないよう気をつけること。
+
+## 地方の土地柄×シナジー（synergies.json の `regional`）
+
+```jsonc
+"regional": {
+  "wordScaled":  { "rules": ["gatherTrain", "openGate", ...] },      // 口コミ係数を乗算
+  "mediaScaled": { "rules": ["mediaPair"], "zones": ["edgeMedia"] }, // 広報係数を乗算
+  "doctrineBoost": {
+    "scale": 0.5,
+    "axes": { "asceticism": ["dojo"], "hierarchy": ["school"], ... }
+  }
+}
+```
+
+`doctrineBoost` は、地方の土地柄補正（例：東北の禁欲+0.20）に応じて
+該当施設の効果を `1 + 補正値 × scale` 倍する。都市は拠点に一つなので、拠点地方の係数が使われる。
 
 ## 注意
 

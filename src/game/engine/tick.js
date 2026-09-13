@@ -10,6 +10,7 @@ import {
   STATE_RELIGION_CAP_BONUS,
 } from './constants.js'
 import { BUSINESSES } from '../data/facilities.js'
+import { runInvestments, portfolioValue } from './invest.js'
 import ENDINGS from '../../content/endings.json' with { type: 'json' }
 import { yen, pct } from '../format.js'
 import {
@@ -32,6 +33,7 @@ function cloneForTick(state) {
   return {
     ...state,
     regions,
+    investments: { ...(state.investments ?? {}) },
     activeMissions: { ...state.activeMissions },
     timedMissions: { ...state.timedMissions },
     businesses: { ...state.businesses },
@@ -57,6 +59,14 @@ export function advanceDay(prev) {
   const t0 = totals(s)
   const fin = finance(s, t0)
   s.funds += fin.net
+
+  // ── 投資の評価替え ──────────────────────────────────
+  const wealth = Math.max(0, s.funds) + portfolioValue(s.investments)
+  const inv = runInvestments(s.investments ?? {}, wealth)
+  s.investments = inv.portfolio
+  for (const e of inv.events) {
+    log(s, 'bad', `【${e.name}】運用が崩れ、${Math.round(e.lost).toLocaleString()}円が消えた。`)
+  }
 
   // ── 布教施策の定額獲得を地方へ配分 ──────────────────
   // 国教化を果たすと布教が制度の側に入り、各地方で取り込める上限が上がる
@@ -154,12 +164,12 @@ export function advanceDay(prev) {
   const fade = 0.10 + s.wariness * 0.010
   const dW =
     (0.05 + dg.warinessAdd + growthPressure + scalePressure) * diffMult * regionWarinessAvg +
-    fx.wariness + mx.wariness - fade
+    fx.wariness + mx.wariness + inv.wariness - fade
   s.wariness = Math.max(0, Math.min(100, s.wariness + dW))
 
   // ── 闇度（裏の事業の濃さ） ──────────────────────────
   const uwFade = UNDERWORLD_FADE_BASE + s.underworld * UNDERWORLD_FADE_SCALE
-  s.underworld = Math.max(0, Math.min(100, s.underworld + (fx.underworld + mx.underworld) - uwFade))
+  s.underworld = Math.max(0, Math.min(100, s.underworld + (fx.underworld + mx.underworld + inv.underworld) - uwFade))
 
   for (let i = UNDERWORLD_STAGES.length - 1; i >= 0; i--) {
     if (s.underworld >= UNDERWORLD_STAGES[i].at && s.underworldStage < i) {
@@ -274,6 +284,7 @@ export function advanceDay(prev) {
       followers: Math.round(t1.followers),
       priests: s.priests,
       funds: Math.round(s.funds),
+      invested: Math.round(portfolioValue(s.investments)),
       net: Math.round(fin.net),
       wariness: Math.round(s.wariness * 10) / 10,
       faith: Math.round(t1.avgFaith * 10) / 10,
@@ -384,7 +395,9 @@ function checkAlternateEndings(s, t) {
   s.achieved = s.achieved ?? {}
 
   const cg = ENDINGS.conglomerate
-  if (!s.achieved.conglomerate && s.funds >= cg.requireFunds
+  // 運用に回している分も教団の資産なので合わせて見る
+  const wealth = s.funds + portfolioValue(s.investments)
+  if (!s.achieved.conglomerate && wealth >= cg.requireFunds
       && (!cg.requireAllBusinesses || BUSINESSES.every((b) => s.businesses[b.id]))) {
     finishWith(s, 'conglomerate', { businesses: BUSINESSES.length, funds: yen(cg.requireFunds) })
     return

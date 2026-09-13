@@ -6,6 +6,7 @@ import {
 import { CLUSTERS } from '../game/data/clusters.js'
 import { yen, people, pct } from '../game/format.js'
 import TipCard from './TipCard.jsx'
+import { portfolioValue } from '../game/engine/invest.js'
 
 const axis = { stroke: '#4a5060', fontSize: 11.5 }
 const xAxis = { dataKey: 'day', interval: 'preserveStartEnd', minTickGap: 46, ...axis }
@@ -21,6 +22,7 @@ function compact(n) {
 }
 
 export default function StatsView({ state, totals: t, finance: fin }) {
+  const invested = portfolioValue(state.investments)
   const h = state.history
   // 長期プレイでも描画が重くならないよう間引く
   const step = Math.max(1, Math.ceil(h.length / 400))
@@ -56,6 +58,7 @@ export default function StatsView({ state, totals: t, finance: fin }) {
             <span className="k">運営収支</span>
             <span className={`v ${fin.net >= 0 ? 'good' : 'bad'}`} style={{ fontSize: 17 }}>{yen(fin.net)}</span>
             <span className="k">累計投下額</span><span className="v">{yen(state.totalSpent)}</span>
+            <span className="k">運用中</span><span className="v">{yen(invested)}</span>
             <span className="k">最大信者数</span><span className="v">{people(state.stats.peakFollowers)}</span>
             <span className="k">遭遇した出来事</span><span className="v">{state.stats.eventsSeen}回</span>
           </div>
@@ -101,6 +104,7 @@ export default function StatsView({ state, totals: t, finance: fin }) {
               <YAxis yAxisId="b" orientation="right" {...axis} tickFormatter={compact} width={48} />
               <Tooltip {...tooltipStyle} formatter={(v, n) => [yen(v), n]} labelFormatter={(d) => `${d}日目`} />
               <Line yAxisId="a" type="monotone" dataKey="funds" name="運転資金" stroke="#6cc08a" strokeWidth={1.6} dot={false} />
+              <Line yAxisId="a" type="monotone" dataKey="invested" name="運用中" stroke="#c79ce0" strokeWidth={1.4} dot={false} />
               <Line yAxisId="b" type="monotone" dataKey="net" name="運営収支/日" stroke="#c9a227" strokeWidth={1.2} dot={false} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
             </ComposedChart>

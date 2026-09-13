@@ -5,6 +5,7 @@ import { FACILITY_MAP, BUSINESS_MAP } from '../data/facilities.js'
 import { MISSION_MAP } from '../data/missions.js'
 import { createInitialState, defaultBusinessNames, BUSINESS_NAME_KEY } from './state.js'
 import ENDINGS from '../../content/endings.json' with { type: 'json' }
+import { VEHICLE_MAP, portfolioValue } from './invest.js'
 import { advanceDay } from './tick.js'
 import {
   isFounderFree, priestsFree, totals, priestCost, convertCapacity,
@@ -25,6 +26,7 @@ function clone(state) {
       ]),
     ),
     doctrine: { ...state.doctrine },
+    investments: { ...(state.investments ?? {}) },
     businesses: { ...state.businesses },
     activeMissions: { ...state.activeMissions },
     timedMissions: { ...state.timedMissions },
@@ -379,6 +381,17 @@ export function reducer(state, action) {
       return s
     }
 
+    case 'MATCH_ADJUST': {
+      const { funds = 0, wariness = 0, underworld = 0, note, kind = 'system' } = action.payload ?? {}
+      const s = clone(state)
+      if (funds < 0) spend(s, -funds)
+      else s.funds += funds
+      s.wariness = Math.max(0, Math.min(100, s.wariness + wariness))
+      s.underworld = Math.max(0, Math.min(100, s.underworld + underworld))
+      if (note) log(s, kind, note)
+      return s
+    }
+
     case 'KILLED_BY': {
       if (state.phase !== 'playing') return state
       const { type = 'rivalAssassin', by = '何者か' } = action.payload ?? {}
@@ -426,6 +439,35 @@ export function reducer(state, action) {
         }
         log(s, 'warn', `【${def.title}】${s.ending.text}`)
       }
+      return s
+    }
+
+    case 'INVEST': {
+      if (state.phase !== 'playing') return state
+      const { vehicle, amount } = action.payload ?? {}
+      const v = VEHICLE_MAP[vehicle]
+      const put = Math.floor(Math.min(Number(amount) || 0, state.funds))
+      if (!v || put <= 0) return state
+      const s = clone(state)
+      s.investments = { ...s.investments, [vehicle]: (s.investments?.[vehicle] ?? 0) + put }
+      s.funds -= put
+      s.investTotalIn = (s.investTotalIn ?? 0) + put
+      log(s, 'system', `${v.name}に${put.toLocaleString()}円を投じた。`)
+      return s
+    }
+
+    case 'DIVEST': {
+      if (state.phase !== 'playing') return state
+      const { vehicle, amount } = action.payload ?? {}
+      const v = VEHICLE_MAP[vehicle]
+      const held = state.investments?.[vehicle] ?? 0
+      const take = Math.floor(Math.min(Number(amount) || 0, held))
+      if (!v || take <= 0) return state
+      const s = clone(state)
+      s.investments = { ...s.investments, [vehicle]: held - take }
+      s.funds += take
+      s.investTotalOut = (s.investTotalOut ?? 0) + take
+      log(s, 'system', `${v.name}から${take.toLocaleString()}円を引き上げた。`)
       return s
     }
 

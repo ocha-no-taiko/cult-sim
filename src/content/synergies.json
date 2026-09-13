@@ -244,5 +244,48 @@
         "wariness": -0.08
       }
     }
-  ]
+  ],
+  "regional": {
+    "desc": "宗教都市が立っている地方の性格を、配置シナジーにも反映させる。係数は地方定義のものをそのまま使う。",
+    "wordScaled": {
+      "rules": [
+        "gatherTrain",
+        "openGate",
+        "broadcastHall",
+        "bulletin",
+        "almsHall"
+      ],
+      "note": "集会所が絡むシナジーは、その地方の口コミ適性に比例する"
+    },
+    "mediaScaled": {
+      "rules": [
+        "mediaPair",
+        "letters"
+      ],
+      "zones": [
+        "edgeMedia"
+      ],
+      "note": "出版局・放送局が絡むシナジーと区画ボーナスは、その地方の広報適性に比例する"
+    },
+    "doctrineBoost": {
+      "scale": 0.5,
+      "axes": {
+        "asceticism": [
+          "dojo"
+        ],
+        "hierarchy": [
+          "school"
+        ],
+        "apocalypse": [
+          "broadcast",
+          "infoRoom"
+        ],
+        "worldly": [
+          "hall",
+          "cultureHall"
+        ]
+      },
+      "note": "土地柄の教義補正がある地方では、その軸に紐づく施設の効果が (1 + 補正値 × scale) 倍になる"
+    }
+  }
 }

@@ -1,0 +1,44 @@
+{
+  "bonds": {
+    "name": "国債",
+    "icon": "🏛",
+    "shadow": false,
+    "desc": "国が発行する債券を買う。増え方は緩いが、元本が飛ぶことはほとんどない。",
+    "tip": "余った運転資金の置き場。年利にして約1.4倍。受け入れ容量が桁違いに大きく、巨額でも利回りが落ちにくい。",
+    "dailyReturn": 0.001,
+    "volatility": 0.0003,
+    "crashChance": 0.0003,
+    "crashLoss": 0.04,
+    "wariness": 0,
+    "underworld": 0,
+    "capacity": 10000000000000
+  },
+  "equity": {
+    "name": "国内株式ファンド",
+    "icon": "📈",
+    "shadow": false,
+    "desc": "証券会社を通じて株式に分散投資する。教団の名で大口を動かすと、多少は目立つ。",
+    "tip": "年利にして約1.9倍。日々の上下は激しく、まれに2割ほど吹き飛ぶ。2兆円を超えると利回りが落ちはじめる。",
+    "dailyReturn": 0.003,
+    "volatility": 0.009,
+    "crashChance": 0.006,
+    "crashLoss": 0.22,
+    "wariness": 0.03,
+    "underworld": 0,
+    "capacity": 2000000000000
+  },
+  "underground": {
+    "name": "裏の運用",
+    "icon": "🎲",
+    "shadow": true,
+    "desc": "帳簿に載らない筋に金を預ける。誰がどう回しているのかは、こちらも知らされない。",
+    "tip": "年利にして約3.9倍。ただし2.2%/日で4割が消え、闇度も上がる。裏の市場は狭く、5,000億円を超えると急に旨みが減る。",
+    "dailyReturn": 0.0125,
+    "volatility": 0.03,
+    "crashChance": 0.022,
+    "crashLoss": 0.4,
+    "wariness": 0,
+    "underworld": 0.12,
+    "capacity": 500000000000
+  }
+}

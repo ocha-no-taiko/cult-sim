@@ -2,6 +2,7 @@ import { REGIONS, REGION_MAP } from '../data/regions.js'
 import { CLUSTERS } from '../data/clusters.js'
 import { DEFAULT_DOCTRINE } from '../data/doctrine.js'
 import { DIFFICULTY_MAP } from './constants.js'
+import { emptyPortfolio } from './invest.js'
 
 export const SAVE_VERSION = 2
 
@@ -97,6 +98,9 @@ export function createInitialState({ difficulty = 'normal', homeRegionId = 'kant
     warinessStage: -1,
     underworld: 0,
     underworldStage: -1,
+    investments: emptyPortfolio(),
+    investTotalIn: 0,
+    investTotalOut: 0,
     founderInjuredUntil: 0,
     bankruptDays: 0,
     election: { foundedDay: null, nextDay: null, attempts: 0, lastResult: null },

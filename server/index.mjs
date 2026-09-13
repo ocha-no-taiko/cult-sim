@@ -10,8 +10,11 @@ import { fileURLToPath } from 'node:url'
 import { randomUUID, scryptSync, randomBytes, timingSafeEqual } from 'node:crypto'
 import { WebSocketServer } from 'ws'
 import {
-  decidePace, dayAt, resolveAssassination,
-  ASSASSIN_COST, ASSASSIN_MIN_UNDERWORLD, PACE_DEFAULT_SEC, PACE_MIN_SEC, PACE_MAX_SEC,
+  decidePace, dayAt, resolveAssassination, resolveLawsuit, lawsuitChance, resolveStake, playerScore,
+  ASSASSIN_COST, ASSASSIN_MIN_UNDERWORLD, ASSASSIN_COOLDOWN_DAYS,
+  LAWSUIT_COST, LAWSUIT_COOLDOWN_DAYS, LAWSUIT_COUNTER_GAP,
+  STAKE_DAYS, STAKE_MAX_RATIO, STAKE_MAX_OPEN,
+  PACE_DEFAULT_SEC, PACE_MIN_SEC, PACE_MAX_SEC,
 } from './rules.mjs'
 
 const PORT = Number(process.env.PORT ?? 8787)
@@ -43,6 +46,7 @@ function makeRoom(id, password) {
     msPerDay: PACE_DEFAULT_SEC * 1000,
     players: new Map(),      // id -> player
     feed: [],
+    stakes: [],
     winner: null,
     winningEnding: null,
   }
@@ -57,11 +61,16 @@ function makePlayer(id, name) {
     paceVote: PACE_DEFAULT_SEC,
     alive: true,
     deadReason: null,
+    difficulty: 'normal',
     // 公開情報
-    pub: { day: 1, followers: 0, funds: 0, wariness: 0, priests: 0, faith: 50, share: 0, businesses: [] },
+    pub: {
+      day: 1, followers: 0, funds: 0, wariness: 0, priests: 0, faith: 50, share: 0,
+      businesses: [], facilityCounts: {},
+    },
     // 秘匿情報（他のクライアントには決して送らない）
     secret: { underworld: 0 },
-    lastAttackDay: 0,
+    lastAttackDay: -99,
+    lastLawsuitDay: -99,
     achieved: {},
   }
 }
@@ -77,6 +86,8 @@ function publicPlayer(p) {
     alive: p.alive,
     deadReason: p.deadReason,
     achieved: p.achieved,
+    difficulty: p.difficulty,
+    score: playerScore(p),
     ...p.pub,
   }
 }
@@ -92,9 +103,24 @@ function roomState(room) {
     day: dayAt(room.startedAt, room.msPerDay),
     winner: room.winner,
     winningEnding: room.winningEnding,
+    stakes: room.stakes.map((s) => ({
+      id: s.id, investorId: s.investorId, targetName: s.targetName,
+      business: s.business, amount: s.amount, dueDay: s.dueDay,
+    })),
     players: [...room.players.values()].map(publicPlayer),
     feed: room.feed.slice(-40),
-    limits: { assassinCost: ASSASSIN_COST, assassinMinUnderworld: ASSASSIN_MIN_UNDERWORLD, maxPlayers: MAX_PLAYERS },
+    limits: {
+      assassinCost: ASSASSIN_COST,
+      assassinMinUnderworld: ASSASSIN_MIN_UNDERWORLD,
+      assassinCooldown: ASSASSIN_COOLDOWN_DAYS,
+      lawsuitCost: LAWSUIT_COST,
+      lawsuitCooldown: LAWSUIT_COOLDOWN_DAYS,
+      lawsuitCounterGap: LAWSUIT_COUNTER_GAP,
+      stakeDays: STAKE_DAYS,
+      stakeMaxRatio: STAKE_MAX_RATIO,
+      stakeMaxOpen: STAKE_MAX_OPEN,
+      maxPlayers: MAX_PLAYERS,
+    },
   }
 }
 
@@ -153,6 +179,19 @@ function handle(ws, raw) {
       if (msg.pub) me.pub = { ...me.pub, ...msg.pub }
       if (typeof msg.underworld === 'number') me.secret.underworld = msg.underworld
       if (msg.achieved) me.achieved = msg.achieved
+      if (msg.difficulty) me.difficulty = msg.difficulty
+      // 訴訟の成立率だけは、公開情報から計算できるので本人に返しておく
+      if (msg.wantChances) {
+        const chances = {}
+        for (const p of room.players.values()) {
+          if (p.id === me.id || !p.alive) continue
+          chances[p.id] = lawsuitChance(
+            { wariness: me.pub.wariness ?? 0, underworld: me.secret.underworld },
+            { wariness: p.pub.wariness ?? 0 },
+          )
+        }
+        send(me.ws, { t: 'chances', lawsuit: chances })
+      }
       return
     }
     case 'announce': {
@@ -162,6 +201,8 @@ function handle(ws, raw) {
       return syncRoom(room)
     }
     case 'assassinate': return onAssassinate(room, me, msg)
+    case 'lawsuit': return onLawsuit(room, me, msg)
+    case 'stake': return onStake(room, me, msg)
     case 'claim': return onClaim(room, me, msg)
     case 'dead': {
       if (!me.alive) return
@@ -220,8 +261,9 @@ function onJoin(ws, msg) {
 function onAssassinate(room, me, msg) {
   if (room.phase !== 'running' || !me.alive) return
   const day = dayAt(room.startedAt, room.msPerDay)
-  if (me.lastAttackDay === day) {
-    return send(me.ws, { t: 'attackResult', outcome: 'cooldown', reason: '同じ日に二度は動かせない' })
+  const wait = ASSASSIN_COOLDOWN_DAYS - (day - me.lastAttackDay)
+  if (wait > 0) {
+    return send(me.ws, { t: 'attackResult', outcome: 'cooldown', reason: `次に動かせるのは${wait}日後` })
   }
   const target = room.players.get(msg.target)
   if (!target || !target.alive || target.id === me.id) {
@@ -265,6 +307,129 @@ function onAssassinate(room, me, msg) {
   syncRoom(room)
 }
 
+// ── 訴訟（警戒度の低い側の攻撃手段） ────────────
+function onLawsuit(room, me, msg) {
+  if (room.phase !== 'running' || !me.alive) return
+  const day = dayAt(room.startedAt, room.msPerDay)
+  const wait = LAWSUIT_COOLDOWN_DAYS - (day - me.lastLawsuitDay)
+  if (wait > 0) {
+    return send(me.ws, { t: 'lawsuitResult', outcome: 'cooldown', reason: `次に起こせるのは${wait}日後` })
+  }
+  const target = room.players.get(msg.target)
+  if (!target || !target.alive || target.id === me.id) {
+    return send(me.ws, { t: 'lawsuitResult', outcome: 'unable', reason: '相手がいない' })
+  }
+  if ((msg.funds ?? 0) < LAWSUIT_COST) {
+    return send(me.ws, { t: 'lawsuitResult', outcome: 'unable', reason: '着手金が足りない' })
+  }
+
+  me.lastLawsuitDay = day
+  const charge = String(msg.charge ?? '').slice(0, 20) || '不当行為'
+  const res = resolveLawsuit(
+    { wariness: me.pub.wariness ?? 0, underworld: me.secret.underworld },
+    { wariness: target.pub.wariness ?? 0, funds: target.pub.funds ?? 0 },
+  )
+
+  send(me.ws, {
+    t: 'lawsuitResult',
+    outcome: res.outcome,
+    targetName: target.name,
+    charge,
+    cost: LAWSUIT_COST,
+    chance: res.chance,
+    seized: res.seized ?? 0,
+    warinessAdd: res.attackerWariness ?? 0,
+  })
+
+  if (res.outcome === 'success') {
+    send(target.ws, { t: 'sued', by: me.name, charge, seized: res.seized, warinessAdd: res.targetWariness })
+    pushFeed(room, `${me.name}が${target.name}を「${charge}」で訴え、${(res.seized / 1e8).toFixed(2)}億円を勝ち取った。`, 'bad')
+  } else if (res.outcome === 'counter') {
+    send(target.ws, { t: 'sued', by: null, charge, seized: 0, warinessAdd: 0, note: `「${charge}」での訴えを退け、反訴した。` })
+    pushFeed(room, `${me.name}の「${charge}」という訴えは反訴され、かえって評判を落とした。`, 'warn')
+  } else {
+    send(target.ws, { t: 'sued', by: null, charge, seized: 0, warinessAdd: 0, note: `「${charge}」で訴えられたが、退けた。` })
+    pushFeed(room, `どこかの教団が「${charge}」で訴えられたが、退けられたらしい。`, 'warn')
+  }
+  syncRoom(room)
+}
+
+// ── 他教団の事業への出資 ────────────────────────
+function onStake(room, me, msg) {
+  if (room.phase !== 'running' || !me.alive) return
+  const day = dayAt(room.startedAt, room.msPerDay)
+  const target = room.players.get(msg.target)
+  const business = String(msg.business ?? '').slice(0, 24)
+  const amount = Math.floor(Number(msg.amount) || 0)
+  const open = room.stakes.filter((s) => s.investorId === me.id).length
+
+  if (!target || !target.alive || target.id === me.id) {
+    return send(me.ws, { t: 'stakeResult', ok: false, reason: '相手がいない' })
+  }
+  if (!(target.pub.businesses ?? []).includes(business)) {
+    return send(me.ws, { t: 'stakeResult', ok: false, reason: 'その教団はその事業を持っていない' })
+  }
+  if (open >= STAKE_MAX_OPEN) {
+    return send(me.ws, { t: 'stakeResult', ok: false, reason: `同時に持てる出資は${STAKE_MAX_OPEN}件まで` })
+  }
+  const cap = Math.floor((msg.funds ?? 0) * STAKE_MAX_RATIO)
+  if (amount <= 0 || amount > cap) {
+    return send(me.ws, { t: 'stakeResult', ok: false, reason: `1件あたり運転資金の${STAKE_MAX_RATIO * 100}%まで` })
+  }
+
+  const stake = {
+    id: randomUUID(),
+    investorId: me.id,
+    investorName: me.name,
+    targetId: target.id,
+    targetName: target.name,
+    business,
+    amount,
+    startDay: day,
+    dueDay: day + STAKE_DAYS,
+    snapshot: { followers: target.pub.followers ?? 0, facilityCount: target.pub.facilityCounts?.[business] ?? 0 },
+  }
+  room.stakes.push(stake)
+  send(me.ws, { t: 'stakeResult', ok: true, stake, charged: amount })
+  pushFeed(room, `${me.name}が${target.name}の事業に出資した。`, 'info')
+  syncRoom(room)
+}
+
+/** 期日の来た出資を精算する */
+function settleStakes(room) {
+  if (room.phase !== 'running' || !room.startedAt) return
+  const day = dayAt(room.startedAt, room.msPerDay)
+  const due = room.stakes.filter((s) => day >= s.dueDay)
+  if (due.length === 0) return
+  room.stakes = room.stakes.filter((s) => day < s.dueDay)
+
+  for (const s of due) {
+    const target = room.players.get(s.targetId)
+    const investor = room.players.get(s.investorId)
+    const now = {
+      followers: target?.pub.followers ?? 0,
+      facilityCount: target?.pub.facilityCounts?.[s.business] ?? 0,
+    }
+    const r = resolveStake(s, now)
+    if (investor) {
+      send(investor.ws, {
+        t: 'stakeSettled',
+        stake: s,
+        rate: r.rate,
+        payout: r.payout,
+        facilities: r.facilities,
+        growth: r.growth,
+      })
+    }
+    pushFeed(
+      room,
+      `${s.investorName}の${s.targetName}への出資が満期を迎えた（${r.rate >= 0 ? '+' : ''}${(r.rate * 100).toFixed(1)}%）。`,
+      r.rate >= 0 ? 'good' : 'warn',
+    )
+  }
+  syncRoom(room)
+}
+
 function onClaim(room, me, msg) {
   if (!me.alive) return
   const ending = String(msg.ending ?? '').slice(0, 32)
@@ -276,7 +441,10 @@ function onClaim(room, me, msg) {
   room.winningEnding = ending
   room.phase = 'over'
   pushFeed(room, `${me.name}が決着に到達した。`, 'good')
-  broadcast(room, { t: 'over', winner: me.name, ending, winnerId: me.id })
+  const ranking = [...room.players.values()]
+    .map((p2) => ({ name: p2.name, difficulty: p2.difficulty, alive: p2.alive, ...playerScore(p2) }))
+    .sort((a, b) => b.total - a.total)
+  broadcast(room, { t: 'over', winner: me.name, ending, winnerId: me.id, ranking })
   syncRoom(room)
 }
 
@@ -348,7 +516,10 @@ wss.on('connection', (ws) => {
 setInterval(() => {
   for (const [id, room] of rooms) {
     if (Date.now() - room.touchedAt > ROOM_IDLE_MS) { rooms.delete(id); continue }
-    if (room.phase !== 'lobby') broadcast(room, roomState(room))
+    if (room.phase !== 'lobby') {
+      settleStakes(room)
+      broadcast(room, roomState(room))
+    }
   }
 }, 2000)
 
